@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 typedef enum _role_mode
 {
@@ -35,15 +36,24 @@ typedef enum _role_kind
     Slab_the_Killer, Suzy_Lafayette, Vulture_Sam, Willy_the_Kid
 } Role;
 
+typedef enum _card_kind
+{
+    BANG, MISSED, GATLING, INDIANS, PANIC, 
+    CAT, STAGECOACH, WELLS, STORE, BEER, 
+    SALOOW, DUEL, BARREL, SCOPE, MUSTANG, 
+    JAIL, DYNAMITE, VOLCANIC, SCHOFIELD, 
+    REMINGTON, REV, WINCHEDTER
+} Kind;
+
 typedef struct _card Card;
 struct _card
 {    
-    bool exist;
     bool is_orange; //消耗 or 裝備
     int suit;
     int number;
-    int distance;
-    void (*func) (Card *this);
+    int kind;
+    int attribute; // 主動 or 被動
+    // 這張牌是否可以主動被出出來
 };
 
 typedef struct _player_list
@@ -63,12 +73,38 @@ typedef struct _player_list
     Identity identity;
 } Player;
 
+
+#define IS_BANG(x) x >= 0 && x <= 24
+#define IS_MISSED(x) x >= 25 && x <= 36
+#define IS_GATLING(x) x == 37
+#define IS_INDIANS(x) x >= 38 && x <= 39
+#define IS_PANIC(x) x >= 40 && x <= 43
+#define IS_CAT(x) x >= 44 && x <= 47
+#define IS_STAGECOACH(x) x >= 48 && x <= 49
+#define IS_WELLS(x) x == 50 
+#define IS_STORE(x) x >= 51 && x <= 52
+#define IS_BEER(x) x >= 53 && x <= 58
+#define IS_SALOOW(x) x == 59
+#define IS_DUEL(x) x >= 60 && x <= 62
+#define IS_BARREL(x) x>=63 && x<=64
+#define IS_SCOPE(x) x==65
+#define IS_MUSTANG(x) x>=66 && x<=67
+#define IS_JAIL(x) x>=68 && x<=70
+#define IS_DYNAMITE(x) x == 71
+#define IS_VOLCANIC(x) x>=72 && x<=73
+#define IS_SCHOFIELD(x) x>=74 && x<=76
+#define IS_REMINGTON(x) x == 77
+#define IS_REV(x) x == 78
+#define IS_WINCHEDTER(x) x == 79
+
+      
 int DECK_NUM, DISCARD_NUM;
 int PLAYERS_NUM;
+int DECK[80], DISCARD[80];
 int SHERIFF_NUM, DEPUTIES_NUM, OUTLAWS_NUM, RENEGADE_NUM;
 int *SEAT_POSITION;
 GMode GAME_STATE;
-Card DECK, DISCARD;
+Card CARD[80];
 Player *PLAYERS_LIST;
 
 #define number_of_players(x) x >= 4 && x <= 7
@@ -116,6 +152,26 @@ void print_player(int th)
     printf("Identity : %d\n\n\n", PLAYERS_LIST[th].identity);
     
 }
+
+void shuffle()
+{
+    srand(time(NULL));
+    int idx[80];
+    for(int i = 1 ; i <= DISCARD_NUM; i++)
+    {
+        do {
+            idx[i-1] = rand() % DISCARD_NUM + 1;  
+            for(int j = 1 ; j < i ; j++)
+                if(idx[i-1] == idx[j-1]) break;   
+        } while(j != i);
+        DECK[i-1] = DISCARD[idx[i-1]-1];
+        //printf("%2d ", DECK[i-1]);
+        //if(i%10 == 0) printf("\n");
+    }  
+    DECK_NUM += DISCARD_NUM;
+    memset(DISCARD, 0, 80);
+}
+
 void game_prepare()
 {
     char *players = calloc(1000, sizeof(char));
@@ -147,14 +203,75 @@ void game_prepare()
         strcpy(PLAYERS_LIST[i].name, players);
         //printf("%s\n",PLAYERS_LIST[i].name);
     }
+    DISCARD_NUM = 80, DECK_NUM = 0;
+    for(int i = 0; i < 80; i++)
+        DISCARD[i] = i;
+    shuffle();
+    printf("\n");
+}
+
+void set_card(int i, bool o, int s, int n, int a, int k) 
+{
+    CARD[i].is_orange = o;
+    CARD[i].kind = k;
+    CARD[i].suit = s;
+    CARD[i].number = n;
+    CARD[i].attribute = a;
+}
+
+void init_card()
+{    
+    FILE *fp;
+    fp = fopen("table.txt", "r");
+    char *line = malloc(1000);
+    fgets(line,1000,fp);
+    for(int i = 0; i < 80; i++)
+    {
+        int a, b, c, d, e, f;
+        fscanf(fp, "%d%d%d%d%d%d", &a, &b, &c, &d, &e, &f);
+        //printf("%2d  %2d%6d%9d%9d%9d\n", a, b, c, d, e, f);        
+        set_card(i, d, b, c, e, f);
+    } 
+    fclose(fp);
+}
+
+void print_card(int i)
+{
+    printf("th  suit number  is_orange attribute kind\n");
+    printf("%2d  %2d%6d%9d%9d%9d\n", i, CARD[i].suit,  CARD[i].number, CARD[i].is_orange, CARD[i].attribute, CARD[i].kind);   
 }
 
 int main()
 {
+    init_card();
     game_prepare();
     print_player(1);
-  print_player(3);
+    print_player(3);
+
+    //print_card(30);
+    
     return 0;
+
+    /*
+    他總共最多80張牌
+    那如果建一個txt 直接列80張牌
+    然後一行一張牌
+    比如說
+       kind suit number  is_orange attribute
+    1. BANG 黑桃    A      true       主動
+    2. BANG 愛心    Ｑ     true       主動
+    3. BANG 愛心    K      true       主動
+    .....
+    迴圈讀80次
+    就建好80張牌
+    這樣會比較好嗎
+    沒有，我只是提議
+    我覺得
+    因為我們不知道我們會不會寫到一半突然想要新增card裡面的東西
+    如果讀檔 我們頂多就是新增一列 
+    在更改比較容易？
+    嗯嗯恩
+    */
 }
 
 
