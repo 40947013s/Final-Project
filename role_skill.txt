@@ -1,0 +1,45 @@
+typedef enum _AMode{bang, 炸彈, 決鬥}AMode;
+
+void HPModify( Player player, int n,  xxx reason ) {
+  if ( n < 0 ) {
+    tmp = player.state;
+    player.state = MINUS_HP;
+    skill( &player, reason );
+    player.state = tmp;
+    player.hp += n;
+  }
+  else
+    player.hp += n;
+
+}
+
+Name              主/被動      條件
+
+- El Gringo          被動       扣血時(炸彈除外) // minus_hp && reason != 炸彈
+- Jourdonnais        被動       被[Bang]時 // is_attacked -> call 酒桶的function
+
+- Sid Ketchum        :(((((((  出牌階段/棄牌階段/被攻擊時 
+- Slab the Killer    主動       出[Bang]時 // implenment in bang function
+- Willy the Kid      主動       出牌階段 // set
+
+-----------------------------------------------
+// 初始化時
+Paul Regret        被動       初始化階段 // set
+Rose Doolan        被動       初始化階段 // set
+
+// 自己回合
+Lucky Duke         主動       判定階段 // judge
+
+Black Jack         被動       抽牌階段 // get card
+Jesse Jones        主動       抽牌階段 
+Kit Carlson        被動       抽牌階段
+Pedro Ramirez      被動       抽牌階段 
+
+// 判定遊戲是否結束時
+Vulture Sam        被動       判定階段(死亡)
+
+Bart Cassidy       被動       扣血時 // minus_hp
+Calamity Janet     主動       出牌階段/被攻擊時 // play_card or is_attacked
+
+Suzy Lafayette     被動       (沒手牌) // if ( player.handcard->size <= 0 )
+                                     // then do somthing
