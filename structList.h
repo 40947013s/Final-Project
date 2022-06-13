@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdbool.h>
+#include <stdlib.h>
+typedef void (*Skill) ( void *this, void* argv );
+
 /* 角色狀態
 * -設定, -自身回合, -他人回合, -死亡*/
 typedef enum _role_mode
@@ -34,8 +38,6 @@ typedef enum _identity_kind
     Outlaws,
     Renegade
 } Identity;
-
-
 
 /* 角色*/
 typedef enum _role_kind

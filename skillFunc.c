@@ -49,8 +49,9 @@ void fBlack_Jack( void* this, void* argv ) {
     Player* player = (Player*)this;
     if ( player->state == GET_CARD ) {
         cardHandler( player, 2 );
-        int size = player->handcard.size;
-        int suit = player->handcard[size-1]->data.suit;
+        int size = player->handcard->size;
+        Card card = get_element( player->handcard, size-1 );
+        int suit = card.suit;
         if( suit == 2 || suit == 3) {
             //printf("Get an extra card.\n");
             cardHandler( player, 1 );
@@ -91,18 +92,18 @@ void fRose_Doolan( void* this, void* argv ){
 void fCalamity_Janet( void* this, void* argv ) {
     if ( this == NULL ) return;
     Player* player = (Player*)this;
-    int size = player->handcard.size;
+    int size = player->handcard->size;
     if ( player->state == FIGHT || player->state == PLAY_CARD ) {
         for(int i = 0; i < size; i++) {
-            if(player->handcard[i].sticker == MISSED) {
-                player->handcard[i].sticker == BANG;                
+            if( get_element( player->handcard, i ).sticker == MISSED) {
+                get_element( player->handcard, i ).sticker == BANG;                
             }
         }
     }
     if ( player->state == IS_ATTACKED) {
         for(int i = 0; i < size; i++) {
-            if(player->handcard[i].sticker == BANG) {
-                player->handcard[i].sticker == MISSED;                
+            if(get_element( player->handcard, i ).sticker == BANG) {
+                player->handcard->data[i].sticker = MISSED;
             }
         }
     }
@@ -116,7 +117,6 @@ void fEl_Gringo( void* this, void* argv ){};
 void fJesse_Jones( void* this, void* argv ){
     if ( this == NULL ) return;
     Player* player = (Player*)this;
-    char *line = malloc(10);
     if( player->state == GET_CARD){ 
       int choice = scan(0, 1, "Do you want to get the card from other players?  ( 0 : No, 1 : Yes ) :\n");
       if(choice == 0)
@@ -126,17 +126,16 @@ void fJesse_Jones( void* this, void* argv ){
       }
       else
       {
-        int id = scan(0,PLAYERS_NUM, "Enter the player's ID you like to choose: \n");
-        while(isEmpty(PLAYERS_LIST[id].handcard))
+        int choose = scan(0,PLAYERS_NUM, "Enter the player's ID you like to choose: \n");
+        while(isEmpty(PLAYERS_LIST[choose].handcard))
         {
-          printf("Player %d's handcard is empty."\n);
-          id = scan(0,PLAYERS_NUM-1, "Please enter again:\n");
+          printf("Player %d's handcard is empty.\n",choose );
+          choose = scan(0,PLAYERS_NUM, "Please enter again:\n");
         }
-        int max = PLAYERS_LIST[id].handcard->size;
+        int max = PLAYERS_LIST[choose].handcard->size;
         int which_card = scan(1,max,"Choose the card you want from 1 to number of cards: \n");
       }
     }
-
   cardHandler( player, 1 );
 };
 
@@ -146,19 +145,19 @@ void fJourdonnais( void* this, void* argv ){};
 void fKit_Carlson( void* this, void* argv ) {
     if ( this == NULL ) return;
     Player* player = (Player*)this;
-    int size = deck.size;
+    int size = deck->size;
     if( player->state == GET_CARD) {
         cardHandler( &tmpPlayer, 3 );
-        printf("Enter your choices to delete :\n")
+        printf("Enter your choices to delete :\n");
         for(int i = 0; i < 3; i++) {
-            Card card = get_element( &tmpPlayer, i );
+            Card card = get_element( tmpPlayer.handcard, i );
             printf("[%d] %d ", i, card.kind);            
         }
         printf("\n");
         int choice = scan(0, 2, "Which role card to choose (0 or 1 or 2): ");
         discardCard( &tmpPlayer, choice );
         
-        while( !IS_EMPTY(tmpPlayer.handcard) )     
+        while( !isEmpty( tmpPlayer.handcard) )     
             takeCard( &tmpPlayer, player, 0 );         
     }
 };
@@ -171,8 +170,8 @@ void fLucky_Duke( void* this, void* argv ){
     while ( !isEmpty( player->judgeCards ) ) {
       Card card = pop_back( player->judgeCards );
       cardHandler( &tmpPlayer, 2 );
-      Card card1 = get_element( &tmpPlayer, 0 );
-      Card card2 = get_element( &tmpPlayer, 1 );
+      Card card1 = get_element( tmpPlayer.handcard, 0 );
+      Card card2 = get_element( tmpPlayer.handcard, 1 );
       discardCard( &tmpPlayer, 0 );
       discardCard( &tmpPlayer, 1 );
       
@@ -199,7 +198,7 @@ void fLucky_Duke( void* this, void* argv ){
 void fPedro_Ramirez( void* this, void* argv ) {
     if ( this == NULL ) return;
     Player* player = (Player*)this;
-    int size = deck.size;
+    int size = deck->size;
     if( player->state == GET_CARD ) {        
         if( !isEmpty(discardPile) ) {
             int choice = scan(0, 1, "Enter your where to get card ( 0 : discard, 1 : deck ) :\n");
@@ -225,7 +224,7 @@ void fSlab_the_Killer( void* this, void* argv ){};
 void fSuzy_Lafayette( void* this, void* argv ){
     if ( this == NULL ) return;
     Player* player = (Player*)this;
-    if ( player.handcard->size <= 0 && player->state!= FIGHT )     {
+    if ( player->handcard->size <= 0 && player->state!= FIGHT )     {
       cardHandler( player, 1 );
     }  
 };

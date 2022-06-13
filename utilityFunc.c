@@ -1,12 +1,8 @@
-
 #include "utilityFunc.h"
-#include <stdbool.h>
 
 void print_player(int th)
 {   
     printf("Player %d\n", th+1);
-    printf("Dynamite : %s\n", PLAYERS_LIST[th].dynamite == true ? "true" : "false");
-    printf("Jail : %s\n", PLAYERS_LIST[th].jail == true ? "true" : "false");
     printf("Name : %s\n", PLAYERS_LIST[th].name);
     printf("Role : %d\n", PLAYERS_LIST[th].role);
     printf("State : %d\n", PLAYERS_LIST[th].state);
@@ -20,9 +16,9 @@ void print_player(int th)
     }
         
     printf("\n");
-    printf("Identity : %d\n\n\n", PLAYERS_LIST[th].identity);
-    
+    printf("Identity : %d\n\n\n", PLAYERS_LIST[th].identity);    
 }
+
 /*棄牌區的牌丟牌庫*/
 void shuffle() {
     srand(time(NULL));
@@ -87,11 +83,11 @@ bool printCard( Card card )
     };
     char *suitName[] = { "黑桃", "愛心", "方塊", "梅花" };
     // printf( "is_orange: %d\n", card.is_orange );
-    printf( "suit: %d\n", suitName[card.suit] );
+    printf( "suit: %s\n", suitName[card.suit] );
     printf( "number: %d\n", card.number );
     // printf( "attribute: %d\n", card.attribute );
     printf( "kind: %s\n", roleKindName[card.kind] );
-    printf( "Sticker: \n", roleKindName[card.kind] );
+    printf( "Sticker: %s\n", roleKindName[card.sticker] );
 }
 
 void clean_buffer(char *arr)
@@ -126,14 +122,14 @@ int scan(int min, int max, char *str)
 // 把牌從 player1第[index]張牌給player2, index = 0, 1, 2....
 bool takeCard( Player *p1, Player *p2, int index ) {
   if ( p1 == NULL || p2 == NULL ) return false;
-  if ( p1 -> size <= index ) {
+  if ( p1->handcard->size <= index ) {
     return false;
   }
 
   Card card = get_element( p1->handcard, index );
   remove_element( p1->handcard, index );
   card.sticker = card.kind;
-  push_back( p2, card );
+  push_back( p2->handcard, card );
 
   return true;
 }

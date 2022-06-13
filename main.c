@@ -9,7 +9,8 @@
 #include "structList.h"
 #include "vector.h"
 #include "skillFunc.h"
-#include "utility.h"
+#include "utilityFunc.h"
+#include "globalVar.h"
 
 int PLAYERS_NUM; //遊戲人數
 int SHERIFF_NUM, DEPUTIES_NUM, OUTLAWS_NUM, RENEGADE_NUM; //身分人數
