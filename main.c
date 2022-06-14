@@ -11,11 +11,12 @@
 #include "skillFunc.h"
 #include "utilityFunc.h"
 #include "globalVar.h"
+#include "UI.h"
+#include "test.h"
 
 int PLAYERS_NUM; //遊戲人數
 int SHERIFF_NUM, DEPUTIES_NUM, OUTLAWS_NUM, RENEGADE_NUM; //身分人數
-
-int *SEAT_POSITION; //座位紀錄 (從0開始記錄至遊戲人數-1)
+int SHERIFF_POSITION;
 int DISTANCE[7][7]; //相對距離表 distance[i][j]: i 看 j
 GMode GAME_STATE; //遊戲狀態
 Card CARD[80]; //消耗牌+裝備牌
@@ -24,13 +25,53 @@ Player *PLAYERS_LIST; //玩家狀態紀錄
 Card_vector* deck;
 Card_vector* discardPile;
 
-typedef void (*Skill) ( void *this, void* argv );
+// typedef void (*Skills) ( void *this, void* argv );
 Skill skills[16] = {
     fBart_Cassidy, fBlack_Jack, fCalamity_Janet, fEl_Gringo, 
     fJesse_Jones, fJourdonnais, fKit_Carlson, fLucky_Duke,
     fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
     fSlab_the_Killer, fSuzy_Lafayette, fVulture_Sam, fWilly_the_Kid
 };
+
+/*
+typedef enum _card_kind
+{
+    BANG, MISSED, GATLING, INDIANS, PANIC, 
+    CAT, STAGECOACH, WELLS, STORE, BEER, 
+    SALOOW, DUEL, BARREL, SCOPE, MUSTANG, 
+    JAIL, DYNAMITE, VOLCANIC, SCHOFIELD, 
+    REMINGTON, REV, WINCHEDTER
+} Kind;
+
+*/
+// typedef void (*CardFunc) ( void *this, void* argv );
+
+
+// 身分 
+char *identityName[] = { "Sheriff", "Deputies", "Outlaws", "Renegade" };
+
+// 角色
+char *roleName[] = {
+    "Bart Cassidy", "Black Jack", "Calamity Janet", "El Gringo", 
+    "Jesse Jones", "Jourdonnais", "Kit Carlson", "Lucky Duke",
+    "Paul Regret", "Pedro Ramirez", "Rose Doolan", "Sid Ketchum",
+    "Slab the Killer", "Suzy Lafayette", "Vulture Sam", "Willy the Kid"
+};
+
+// 消耗牌+裝備牌
+char *cardKindName[] = {
+    "BANG", "MISSED", "GATLING", "INDIANS", "PANIC", 
+    "CAT", "STAGECOACH", "WELLS", "STORE", "BEER", 
+    "SALOOW", "DUEL", "BARREL", "SCOPE", "MUSTANG", 
+    "JAIL", "DYNAMITE", "VOLCANIC", "SCHOFIELD", 
+    "REMINGTON", "REV", "WINCHEDTER"
+};
+
+// 花色
+char *suitName[] = { "none", "spade", "heart", "diamond", "club" };
+
+// Color
+char *Color[9] = { RESET, RED, YELLOW, GREEN, BLUE, MAG, CYN, WHT, RED_BACK };
 
 int min(int a, int b)
 {
@@ -45,12 +86,14 @@ int min(int a, int b)
 }
 void init_player(Player *i)
 {
-    // i->dynamite = false;
-    // i->jail = false;
     i->hp = 0;
+    i->hp_limit = 0;
     i->handcard = create_vector(10);
     i->judgeCards = create_vector(5);
-    i->equipment = create_vector(5);
+    i->attack_distance = 1;
+    i->weapon = create_vector(5);
+    i->shield = create_vector(5);
+    i->distance_item = create_vector(5);
     i->role = Bart_Cassidy;
     i->state = SET;
     i->identity = Sheriff;
@@ -74,36 +117,58 @@ int identity_shuffle() {
 void role_shuffle() {
     srand(time(NULL));
     bool is_take[16] = {0};
-    int num = PLAYERS_NUM*2, choice = -1, last = -1;
-    for (int i = 0; i < num; i++) {
-        int j = rand() % 16;
-        if (is_take[j]) {
-            i--;
-            continue;
+    for(int i = 0; i < PLAYERS_NUM; i++) {
+        Role j = rand() % 16, res;
+        while(is_take[j]) {
+            j = (j+1) % 16;
         }
         is_take[j] = true;
-        if(i%2 == 1) {  
-            choice = scan(0, 1, "Which role card to choose (0 or 1): ");
-            choice == 0 ? last : j;
-            PLAYERS_LIST[i/2].role = j+choice;            
-        } last = j;
+        int k = rand() % 16;
+        while(is_take[k]) {
+            k = (k+1) % 16;
+        }
+        is_take[k] = true;
+        // print role j
+        // print role k
+        int choice = scan(0, 1, "Which role card to choose (0 or 1): ");
+        if(choice == 0) {
+            PLAYERS_LIST[i].role = j, res = j;
+        } else {
+            PLAYERS_LIST[i].role = k, res = k;
+        }
+        PLAYERS_LIST[i].hp = 4, PLAYERS_LIST[i].hp_limit = 4;
+        if( res == El_Gringo || res == Paul_Regret ) {
+            PLAYERS_LIST[i].hp --, PLAYERS_LIST[i].hp_limit --;
+        }
     }
+  
+    // srand(time(NULL));
+    // bool is_take[16] = {0};
+    // int num = PLAYERS_NUM*2, choice = -1, last = -1;
+    // for (int i = 0; i < num; i++) {
+    //     int j = rand() % 16;
+    //     if (is_take[j]) {
+    //         i--;
+    //         continue;
+    //     }
+    //     is_take[j] = true;
+    //     if(i%2 == 1) {  
+    //         choice = scan(0, 1, "Which role card to choose (0 or 1): ");
+    //         int c = choice == 0 ? (last-1) : (j-1);
+    //         PLAYERS_LIST[i/2].role = c;            
+    //     } last = j;
+    // }
 }
 
 void game_prepare()
 {
     //設定遊戲人數    
     PLAYERS_NUM = scan(4, 7, "Input the numbers of players (4~7): ");
-    
-    //設定座位    
-    SEAT_POSITION = calloc(PLAYERS_NUM, sizeof(int));
-    PLAYERS_LIST = calloc(PLAYERS_NUM, sizeof(Player));
-      
+    PLAYERS_LIST = (Player*)calloc( PLAYERS_NUM, sizeof(Player) );
     //設定遊戲玩家名稱
     char *players = calloc(100, sizeof(char));
     for(int i = 0; i < PLAYERS_NUM; i++)
     {
-        SEAT_POSITION[i] = i;
         init_player(&PLAYERS_LIST[i]);
         PLAYERS_LIST[i].id = i;
         printf("Input the name of player %d : ", i+1);
@@ -145,19 +210,11 @@ void game_prepare()
         PLAYERS_LIST[counter++].identity = Outlaws;
     for(int i = 0; i < RENEGADE_NUM; i++)
         PLAYERS_LIST[counter++].identity = Renegade;
-    counter = identity_shuffle(); //警長位置
-    PLAYERS_LIST[counter].hp++;
+    SHERIFF_POSITION = identity_shuffle(); //警長位置
     
     /*for(int i = 0; i < PLAYERS_NUM; i++)
         printf("%d\n", PLAYERS_LIST[i].identity);*/
 
-    //設定角色    
-    role_shuffle();
-    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-      Player p = PLAYERS_LIST[i];
-      skills[p.role]( &p, NULL );
-    }
-    
     //第一次洗牌    
     deck = create_vector(80);
     discardPile = create_vector(80);
@@ -166,8 +223,18 @@ void game_prepare()
         push_back(discardPile, CARD[i]);
     }
 
-    shuffle();    
-    printf("\n");
+    shuffle();   
+  
+    //設定角色    
+    role_shuffle();
+    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+      Player *p = PLAYERS_LIST + i;
+      // skills[p->role]( &p, NULL );
+    }
+    PLAYERS_LIST[SHERIFF_POSITION].hp++;
+    PLAYERS_LIST[SHERIFF_POSITION].hp_limit++;    
+ 
+    GAME_STATE = NOT_YET_START;
 }
 
 void set_card(int i, bool o, int s, int n, int a, int k) 
@@ -204,56 +271,126 @@ void print_card(Card i)
     return;    
 }
 
+
+void playerCard( Player *player, int numOfBang ) {
+    int *color = NULL;
+    int num = setColor( &color, -1, -1, 1, player->handcard, 3 );
+    if ( num == 0 ) {
+        puts("No hand card");
+        player->state = DISCARD_CARD;
+        return;
+    }
+
+    int choice, size = player->handcard->size;
+    char *str = (char *)calloc( strlen("Choice the card you want to play(1~, 0: end the round): ") + 5, sizeof(char) );
+    sprintf( str, "Choice the card you want to play(1~%d, 0: end the round): ", size );
+    char input[100] = {0};
+    bool warn = false;
+    while ( 1 ) {
+        system("clear");
+        printUI( player );
+        if ( warn )
+            puts("You can't play this card");
+        printHandCard( player->handcard, color);
+        choice = scan( 0, size, str );
+        if ( choice == 0 ) {
+            player->state = DISCARD_CARD;
+            return;
+        }
+        else if ( color[choice-1] == 3 ) {
+            color[choice-1] = 1;
+            system("clear");
+            printUI( player );
+            printHandCard( player->handcard, color);
+            Card tmp = get_element( player->handcard, choice-1 );
+            printf( "Are you sure you want to use the [%s] card? (Y/n) ", cardKindName[tmp.sticker] );
+            fgets(input, 100, stdin);
+            if ( input[0] == 'Y' || input[0] == 'y' ) {
+                warn = false;
+                if ( tmp.sticker == BANG ) {
+                    if ( Bang( player ) ) {
+                        discardCard( player->handcard, choice-1 );
+                        printf( "use card\n" );
+                    }  
+                }
+                break;
+            }else {
+                warn = false;
+                color[choice-1] = 3;
+                continue;
+            }
+        }
+        else {
+            warn = true;
+            continue;
+        }
+    }
+    free( str );
+}
+
 int main()
 {
     init_card();
     game_prepare();
 
-    int i = 0; //從警長開始
-    while ( GAME_STATE != END ) 
-    {
-        
-        Player p = PLAYERS_LIST[i];
+    int i = SHERIFF_POSITION; //從警長開始
+    int numOfBang = PLAYERS_LIST[i].numOfBang; // -1表示可以連續無限次
+    Player *p = &(PLAYERS_LIST[i]);
+  
 
-        // if ( p.state == IS_DEAD )
-        // {
-        //     i++;
-        //     if ( i == PLAYERS_NUM ) i = 0;
-        //     continue;
-        // }
-
-      
-        skills[p.role]( &p, NULL );
-
-        if ( p.state == SET )
-        {
-
-        }
-        else if ( p.state == JUDGE )
-        {
-        
-        }
-        else if ( p.state == GET_CARD )
-        {
-
-        }
-        else if ( p.state == PLAY_CARD )
-        {
+    // 發牌給所有玩家
+    if ( GAME_STATE == NOT_YET_START ) {
+        for ( int i = 0; i <= PLAYERS_NUM; i++ ) {
+          cardHandler( PLAYERS_LIST + i, PLAYERS_LIST[i].hp );
+          PLAYERS_LIST[i].hp = JUDGE;
           
         }
-        else if ( p.state == DISCARD_CARD )
-        {
+        GAME_STATE = IN_ROUND;
+    }
+    
+    while ( GAME_STATE != END ) 
+    {
+        printUI( p );
+        
+        // skills[p->role]( &p, NULL );
 
-        }
-        else if( p.state == FINISH_TIHS_TURN )
+        if ( p->state == SET )
         {
-            i++;
-            if ( i == PLAYERS_NUM ) i = 0;
-            PLAYERS_LIST[i].state = JUDGE;
+          p->state = JUDGE;
+        }
+        else if ( p->state == JUDGE )
+        {
+          p->state = GET_CARD;
+        }
+        else if ( p->state == GET_CARD )
+        {
+            if ( cardHandler( p, 2 ) < 2 ) {
+                puts( "場上卡片不足" );
+                return 0;
+            }
+            p->state = PLAY_CARD;
+        }
+        else if ( p->state == PLAY_CARD )
+        {
+            playerCard(p, 1);
+        }
+        else if ( p->state == DISCARD_CARD )
+        {
+            p->state = FINISH_TIHS_TURN;
+        }
+        else if( p->state == FINISH_TIHS_TURN )
+        {
+            break;
+            // i++;
+            // if ( i == PLAYERS_NUM ) i = 0;
+            // p = &(PLAYERS_LIST[i]);
+            // PLAYERS_LIST[i].state = JUDGE;
+            // numOfBang = PLAYERS_LIST[i].numOfBang;
         }
         
     }
     
+
     return 0;
 }
 

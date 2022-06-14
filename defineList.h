@@ -24,3 +24,15 @@
 #define IS_WINCHEDTER(x) x == 79
 
 #define number_of_players(x) x >= 4 && x <= 7
+
+#define RED   "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW   "\033[33m"
+#define BLUE   "\033[34m"
+#define MAG   "\033[35m"
+#define CYN   "\033[36m"
+#define WHT   "\033[37m"
+#define RED_BACK   "\033[41m"
+#define RESET "\033[0m"
+
+#define ENTER printf("Press Enter to Continue"); while( getchar() != '\n' )

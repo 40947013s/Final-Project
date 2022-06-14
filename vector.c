@@ -36,6 +36,7 @@ static void _setValue(const Card_vector *v, size_t n, Card value) {
         v->data[n].kind = value.kind;
         v->data[n].number = value.number;
         v->data[n].suit = value.suit;
+        v->data[n].sticker = value.sticker;
         v->data[n].is_orange = value.is_orange;
     }
 }

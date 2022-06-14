@@ -80,11 +80,16 @@ typedef struct {
 typedef struct _player_list
 {
     int id;
-    // bool    dynamite;
-    // bool    jail;
-    int     hp;
-    int     handcard_num;
-    Card_vector* equipment;
+    int hp;
+    int hp_limit;    
+    // Card_vector* equipment;
+    int attack_distance;
+    // 武器
+    Card_vector* weapon;
+    // 防具
+    Card_vector* shield;
+    // 距離道具
+    Card_vector* distance_item;
     Card_vector* judgeCards;
     Card_vector* handcard;
     char    name[1000];    

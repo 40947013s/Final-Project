@@ -96,7 +96,7 @@ void fCalamity_Janet( void* this, void* argv ) {
     if ( player->state == FIGHT || player->state == PLAY_CARD ) {
         for(int i = 0; i < size; i++) {
             if( get_element( player->handcard, i ).sticker == MISSED) {
-                get_element( player->handcard, i ).sticker == BANG;                
+                player->handcard->data[i].sticker = BANG;                
             }
         }
     }
@@ -111,12 +111,36 @@ void fCalamity_Janet( void* this, void* argv ) {
 };
 
 //    if(IS_ATTACK) 從傷害玩家抽取傷害數卡牌，炸彈不算
-void fEl_Gringo( void* this, void* argv ){};
+void fEl_Gringo( void* this, void* argv ) {
+    if ( this == NULL ) return;
+    Player* player = (Player*)this;
+    if( player->state == IS_ATTACKED /*&& !炸彈*/) {
+        // int num = 傷害數, card_size = 傷害玩家->handcard->size;
+        // if(num >= card_size) {
+        //     printf("Player %s's sum of card is less than you can draw.\n");
+        //     printf("All of this player's card belong to you.\n");
+        //     while(!isEmpty(傷害玩家->handcard)) {
+        //         Card i = pop_back(傷害玩家->handcard);
+        //         push_back(player->handcard, i);
+        //     }
+        // } else {
+        //     printf("You can choose &d cards from Player %s\n", 傷害玩家->name);
+        //     for(int i = 0; i < n; i++) {
+        //         int size = 傷害玩家->handcard->size;
+        //         printf("(0~%d) :\n");
+        //         int choice = scan(0, size-1, "--> ");
+        //         takeCard( 傷害玩家->handcard, player->handcard, choice );
+        //     }
+        // }        
+    }
+}
 
 //    如果是抽牌階段 -> 選第一抽牌庫or別人的牌
 void fJesse_Jones( void* this, void* argv ){
     if ( this == NULL ) return;
     Player* player = (Player*)this;
+    char *str = malloc(1000);
+    int *store_position = (int *)calloc(PLAYERS_NUM,sizeof(int));
     if( player->state == GET_CARD){ 
       int choice = scan(0, 1, "Do you want to get the card from other players?  ( 0 : No, 1 : Yes ) :\n");
       if(choice == 0)
@@ -126,26 +150,60 @@ void fJesse_Jones( void* this, void* argv ){
       }
       else
       {
-        int choose = scan(0,PLAYERS_NUM, "Enter the player's ID you like to choose: \n");
-        while(isEmpty(PLAYERS_LIST[choose].handcard))
+        int att_arr = 0;
+        for(int i=0;i<PLAYERS_NUM;i++)
         {
-          printf("Player %d's handcard is empty.\n",choose );
-          choose = scan(0,PLAYERS_NUM, "Please enter again:\n");
+          Player p = PLAYERS_LIST[i];
+          if(strcmp(p.name,player->name)==0) //找attacker在array的位置
+          {
+            att_arr = i;
+              break;
+          }
         }
-        int max = PLAYERS_LIST[choose].handcard->size;
-        int which_card = scan(1,max,"Choose the card you want from 1 to number of cards: \n");
+        printf("Enter the player you like to choose (0~%d):\n",PLAYERS_NUM-1);
+        int counter=0;
+        
+        for(int i=0;i<PLAYERS_NUM;i++)
+        {
+          if(att_arr!=i)
+          {
+            char *tmp = malloc(100);
+            sprintf(tmp,"[%d] name: %s ID: %d\n",counter,PLAYERS_LIST[i].name,PLAYERS_LIST[i].id);
+            strcat(str,tmp);
+            free(tmp);
+            store_position[counter] = i;
+            counter++;
+          }
+        }
+        int choose_player = scan(0,counter-1, str);
+        int array_position= store_position[choose_player];
+
+        while(isEmpty(PLAYERS_LIST[array_position].handcard))
+        {
+          printf("%s's handcard is empty.\n",PLAYERS_LIST[array_position].name );
+          choose_player = scan(0,counter-1, "Please enter again:\n");
+          array_position = store_position[choose_player];
+        }
+        int max = PLAYERS_LIST[array_position].handcard->size;
+        printf("Player %s has %d card(s) (choose from 0 to %d)\n",PLAYERS_LIST[array_position].name,max,max-1);
+        int which_card = scan(0,max-1,"Choose the card you want: \n");
+        takeCard( PLAYERS_LIST[array_position].handcard, player->handcard, which_card );
       }
+      cardHandler( player, 1 );
     }
-  cardHandler( player, 1 );
+  free(str);
+  free(store_position);
 };
 
-void fJourdonnais( void* this, void* argv ){};
+//    內建酒桶 若有兩個可以執行兩次
+void fJourdonnais( void* this, void* argv ) {}
 
-// 如果是抽牌階段 -> 抽三張牌 -> 選一張丟棄
+//    如果是抽牌階段 -> 抽三張牌 -> 選一張丟棄
 void fKit_Carlson( void* this, void* argv ) {
     if ( this == NULL ) return;
     Player* player = (Player*)this;
-    int size = deck->size;
+    int size = 0;
+    if ( !isEmpty(deck) ) size = deck->size;
     if( player->state == GET_CARD) {
         cardHandler( &tmpPlayer, 3 );
         printf("Enter your choices to delete :\n");
@@ -155,12 +213,12 @@ void fKit_Carlson( void* this, void* argv ) {
         }
         printf("\n");
         int choice = scan(0, 2, "Which role card to choose (0 or 1 or 2): ");
-        discardCard( &tmpPlayer, choice );
+        discardCard( tmpPlayer.handcard, choice );
         
         while( !isEmpty( tmpPlayer.handcard) )     
-            takeCard( &tmpPlayer, player, 0 );         
+            takeCard( tmpPlayer.handcard, player->handcard, 0 );         
     }
-};
+}
 
 //    if(抽牌判定) 可以抽兩張挑一張
 void fLucky_Duke( void* this, void* argv ){
@@ -172,8 +230,8 @@ void fLucky_Duke( void* this, void* argv ){
       cardHandler( &tmpPlayer, 2 );
       Card card1 = get_element( tmpPlayer.handcard, 0 );
       Card card2 = get_element( tmpPlayer.handcard, 1 );
-      discardCard( &tmpPlayer, 0 );
-      discardCard( &tmpPlayer, 1 );
+      discardCard( tmpPlayer.handcard, 0 );
+      discardCard( tmpPlayer.handcard, 1 );
       
       printf( "card1: " );
       printCard( card1 );
@@ -192,13 +250,14 @@ void fLucky_Duke( void* this, void* argv ){
       
     }    
   }
-};
+}
 
 //    如果是抽牌階段 -> 選第一抽(牌庫or棄牌)
 void fPedro_Ramirez( void* this, void* argv ) {
     if ( this == NULL ) return;
     Player* player = (Player*)this;
-    int size = deck->size;
+    int size = 0;
+    //if ( !isEmpty(deck) ) size = deck->size;
     if( player->state == GET_CARD ) {        
         if( !isEmpty(discardPile) ) {
             int choice = scan(0, 1, "Enter your where to get card ( 0 : discard, 1 : deck ) :\n");
@@ -209,16 +268,40 @@ void fPedro_Ramirez( void* this, void* argv ) {
             }
         }
         else {
-            printf("Deck is empty.\n");
+            printf("DISCARD_PILE is empty.\n");
             cardHandler( player, 1 );
         }
+      cardHandler( player, 1 );
     }
-    cardHandler( player, 1 );
-};
+    
+}
 
+//    任何時刻丟兩張守牌換一滴血 (觸發條件???)
+void fSid_Ketchum( void* this, void* argv ){
+    if ( this == NULL ) return;
+    Player* player = (Player*)this;
+    if(player->handcard->size >= 2) {
+        for(int i = 0; i < 2; i++) {
+            printf("%d -> ", i);
+            for(int j = 0; j < player->handcard->size; j++) {
+                printf("[%d] %d ", j, get_element( player->handcard, j).kind );
+            } 
+            printf("\n");
+            int size = player->handcard->size;            
+            int choice = scan(0, size-1, "Choose which card to delete (exchange hp) :");
+            remove_element(player->handcard, choice);
+        }
+    }    
+}
 
-void fSid_Ketchum( void* this, void* argv ){};
-void fSlab_the_Killer( void* this, void* argv ){};
+//    對方必須以兩張 (閃躲或是酒桶) 躲 bang
+void fSlab_the_Killer( void* this, void* argv ){
+    if ( this == NULL ) return;
+    Player* player = (Player*)this;
+    if( player->state == PLAY_CARD /*且使用bang*/) {
+        // call BANG function
+    }
+}
 
 //    if(沒手牌) 抽牌
 void fSuzy_Lafayette( void* this, void* argv ){
@@ -228,6 +311,21 @@ void fSuzy_Lafayette( void* this, void* argv ){
       cardHandler( player, 1 );
     }  
 };
-    
-void fVulture_Sam( void* this, void* argv ){};
-void fWilly_the_Kid( void* this, void* argv ){};
+
+//    連結cardFunc.c IsGameOver(), 接收死亡玩家的手牌及裝備 
+void fVulture_Sam( void* this, void* argv ) {
+    if ( this == NULL ) return;
+    Player* player = (Player*)this;
+    //死者    
+}
+
+//    在自身回合 bang無上限 (PLAY_CARD 和 DISCARD_CARD 狀態前要進入)
+void fWilly_the_Kid( void* this, void* argv ) {
+    if ( this == NULL ) return;
+    Player* player = (Player*)this;
+    if( player->state == PLAY_CARD ) {
+        player->numOfBang = -1; //無上限
+    } else if( player->state == DISCARD_CARD ) {
+        player->numOfBang = 1;
+    }
+}
