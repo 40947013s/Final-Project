@@ -55,7 +55,7 @@ typedef enum _card_kind
     CAT, STAGECOACH, WELLS, STORE, BEER, 
     SALOOW, DUEL, BARREL, SCOPE, MUSTANG, 
     JAIL, DYNAMITE, VOLCANIC, SCHOFIELD, 
-    REMINGTON, REV, WINCHEDTER
+    REMINGTON, REV, WINCHEDTER, NONE
 } Kind;
 
 
@@ -72,8 +72,8 @@ struct _card
 };
 
 typedef struct {
-    size_t size;
-    size_t allocate_size;
+    int size;
+    int allocate_size;
     Card *data;
 } Card_vector;
 
@@ -85,11 +85,16 @@ typedef struct _player_list
     // Card_vector* equipment;
     int attack_distance;
     // 武器
+    Kind equipWeapon;
     Card_vector* weapon;
     // 防具
+    Kind equipShield;
     Card_vector* shield;
     // 距離道具
+    Kind equipScope;
+    Kind equipMustang;
     Card_vector* distance_item;
+
     Card_vector* judgeCards;
     Card_vector* handcard;
     char    name[1000];    

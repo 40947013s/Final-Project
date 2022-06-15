@@ -41,7 +41,8 @@ void printHandCard( Card_vector *cards, int color[] ) {
     puts("");
 }
 // 若不指定index,kind,attribute，則填入-1
-int setColor( int **c, int index, Kind kind, int attribute, Card_vector* handcard, int color ) {
+// if index == -1 and kind == -1 and attribute == -1, then  all the card will be colored
+int setColor( int **c, int index, int kind, int attribute, Card_vector* handcard, int color ) {
     if ( handcard == NULL || isEmpty( handcard ) ) {
         return 0;
     }
@@ -51,6 +52,14 @@ int setColor( int **c, int index, Kind kind, int attribute, Card_vector* handcar
         *c = (int*)calloc( handcard->size, sizeof(int));
         memset( *c, 0, handcard->size * sizeof(int) );
     }
+
+    if ( index == -1 && kind == -1 && attribute == -1 ) {
+        for ( int i = 0; i < handcard->size; i++ ) {
+            (*c)[i] = color;
+        }
+        return handcard->size;
+    }
+
     if ( index != -1 ) {
         (*c)[index] = color;
         num++;
@@ -116,9 +125,9 @@ void printUI( Player *nowPlayer ) {
     printf( "%-15s", "HandCard" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( i == indexOfNowPlayer )
-            printf("%s%-15zu%s", YELLOW, PLAYERS_LIST[i].handcard->size, RESET);
+            printf("%s%-15d%s", YELLOW, PLAYERS_LIST[i].handcard->size, RESET);
         else
-            printf("%s%-15zu%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].handcard->size, RESET );
+            printf("%s%-15d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].handcard->size, RESET );
     }
     puts("");
 
@@ -132,13 +141,24 @@ void printUI( Player *nowPlayer ) {
         
     puts("");
 
+    printf( "%-15s", "Distance" );
+    int nowPlayerID = PLAYERS_LIST[indexOfNowPlayer].id;
+    for (int i = 0; i < PLAYERS_NUM; i++) {
+        int id = PLAYERS_LIST[i].id;
+        if ( i == indexOfNowPlayer )
+            printf("%s%-15d%s", YELLOW, DISTANCE[nowPlayerID][id], RESET);
+        else
+            printf("%s%-15d%s", ( i == indexOfSheriff ) ? RED : RESET, DISTANCE[nowPlayerID][id], RESET );
+    }
+    puts("");
+
     puts("---------------------------------------------------------------------------------");
     printf( "%-15s", "Weapon" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( isEmpty(PLAYERS_LIST[i].weapon) )
-            printf("%s%-15s", RESET, "None" );
+            printf("%s%-15s%s", RESET, "None", RESET );
         else
-            printf("%s%-15s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].weapon, 0).kind] );
+            printf("%s%-15s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].weapon, 0).kind], RESET );
 
     }
     puts("");
@@ -146,18 +166,27 @@ void printUI( Player *nowPlayer ) {
     printf( "%-15s", "Shield" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( isEmpty(PLAYERS_LIST[i].shield) )
-            printf("%s%-15s", RESET, "None" );
+            printf("%s%-15s%s", RESET, "None", RESET );
         else
-            printf("%s%-15s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind] );
+            printf("%s%-15s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind], RESET );
     }
     puts("");
 
-    printf( "%-15s", "Distance item" );
+    printf( "%-15s", "Scope" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
-        if ( isEmpty(PLAYERS_LIST[i].distance_item) )
-            printf("%s%-15s", RESET, "None" );
+        if ( PLAYERS_LIST[i].equipScope == NONE )
+            printf("%s%-15s%s", RESET, "None", RESET );
         else
-            printf("%s%-15s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].distance_item, 0).kind] );
+            printf("%s%-15s%s", YELLOW, cardKindName[PLAYERS_LIST[i].equipScope], RESET );
+    }
+    puts("");
+
+    printf( "%-15s", "Mustang" );
+    for (int i = 0; i < PLAYERS_NUM; i++) {
+        if ( PLAYERS_LIST[i].equipMustang == NONE )
+            printf("%s%-15s%s", RESET, "None", RESET );
+        else
+            printf("%s%-15s%s", YELLOW, cardKindName[PLAYERS_LIST[i].equipMustang], RESET );
     }
     puts("");
 

@@ -125,11 +125,15 @@ int scan(int min, int max, char *str)
     int warn = 0, choice = -1;
     char *input = malloc(1000);
     while(1) {
-        if(warn) printf("Wrong input.\n");
+        if(warn) printf("Wrong input.\n\n");
         printf("%s", str);
         fgets(input, 1000, stdin);
         clean_buffer(input);
         choice = strtol(input, NULL , 10);
+        if( strcmp( input, "0") != 0 && choice == 0 ) {
+            warn++;            
+            continue;
+        }
         warn++;
         if(choice >= min && choice <= max) break;
     }  
@@ -177,3 +181,42 @@ void takeAllCards( Player *p1, Player *p2 ) {
         push_back( p2->handcard, card );
     }
 }
+
+// 回傳此種sticker 種類卡牌位置，沒有則回傳-1
+int find_sticker( Card_vector *card, Kind kind ) {
+    for(int i = 0; i < card->size; i++) {
+        if( card->data[i].sticker == kind ) {
+            if( card->data[i].suit >= 1 && card->data[i].suit <= 13 )
+                return i;
+        }
+    }
+    return -1;
+}
+
+// p1 <- p2, i.e. p1 = p2;
+void setPlayer( Player *p1, Player *p2 ) {
+    p1->id = p2->id;
+    p1->hp = p2->hp;
+    p1->hp_limit = p2->hp_limit;
+    delete_vector( p1->handcard );
+    p1->handcard = p2->handcard;
+    delete_vector( p1->weapon );
+    p1->weapon = p2->weapon;
+    delete_vector( p1->shield );
+    p1->shield = p2->shield;
+    delete_vector( p1->distance_item );
+    p1->distance_item = p2->distance_item;
+    delete_vector( p1->judgeCards );
+    p1->judgeCards = p2->judgeCards;
+    
+    p1->attack_distance = p2->attack_distance;
+    p1->equipWeapon = p2->equipWeapon;
+    p1->equipShield = p2->equipShield;
+    p1->equipScope = p2->equipScope;
+    p1->equipMustang = p2->equipMustang;
+    p1->role = p2->role;
+    p1->state = p2->state;
+    p1->identity = p2->identity;
+    p1->numOfBang = p2->numOfBang;
+    strcpy(p1->name, p2->name);
+}  

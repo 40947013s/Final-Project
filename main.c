@@ -14,13 +14,14 @@
 #include "UI.h"
 #include "test.h"
 
-int PLAYERS_NUM; //遊戲人數
+int PLAYERS_NUM, DEAD_NUM; //遊戲人數
 int SHERIFF_NUM, DEPUTIES_NUM, OUTLAWS_NUM, RENEGADE_NUM; //身分人數
 int SHERIFF_POSITION;
 int DISTANCE[7][7]; //相對距離表 distance[i][j]: i 看 j
 GMode GAME_STATE; //遊戲狀態
 Card CARD[80]; //消耗牌+裝備牌
 Player *PLAYERS_LIST; //玩家狀態紀錄
+Player *DEAD_LIST; //死亡玩家狀態紀錄
 
 Card_vector* deck;
 Card_vector* discardPile;
@@ -32,20 +33,6 @@ Skill skills[16] = {
     fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
     fSlab_the_Killer, fSuzy_Lafayette, fVulture_Sam, fWilly_the_Kid
 };
-
-/*
-typedef enum _card_kind
-{
-    BANG, MISSED, GATLING, INDIANS, PANIC, 
-    CAT, STAGECOACH, WELLS, STORE, BEER, 
-    SALOOW, DUEL, BARREL, SCOPE, MUSTANG, 
-    JAIL, DYNAMITE, VOLCANIC, SCHOFIELD, 
-    REMINGTON, REV, WINCHEDTER
-} Kind;
-
-*/
-// typedef void (*CardFunc) ( void *this, void* argv );
-
 
 // 身分 
 char *identityName[] = { "Sheriff", "Deputies", "Outlaws", "Renegade" };
@@ -91,8 +78,12 @@ void init_player(Player *i)
     i->handcard = create_vector(10);
     i->judgeCards = create_vector(5);
     i->attack_distance = 1;
+    i->equipWeapon = NONE;
     i->weapon = create_vector(5);
+    i->equipShield = NONE;
     i->shield = create_vector(5);
+    i->equipScope = NONE;
+    i->equipMustang = NONE;
     i->distance_item = create_vector(5);
     i->role = Bart_Cassidy;
     i->state = SET;
@@ -130,12 +121,15 @@ void role_shuffle() {
         is_take[k] = true;
         // print role j
         // print role k
-        int choice = scan(0, 1, "Which role card to choose (0 or 1): ");
+        puts( "Which role card to choose (0 or 1): " );
+        printf( "[0] %s, [1] %s\n", roleName[j], roleName[k]);
+        int choice = scan(0, 1, "--> ");
         if(choice == 0) {
             PLAYERS_LIST[i].role = j, res = j;
         } else {
             PLAYERS_LIST[i].role = k, res = k;
         }
+        printf( "Your role: %s\n", roleName[res] );
         PLAYERS_LIST[i].hp = 4, PLAYERS_LIST[i].hp_limit = 4;
         if( res == El_Gringo || res == Paul_Regret ) {
             PLAYERS_LIST[i].hp --, PLAYERS_LIST[i].hp_limit --;
@@ -165,6 +159,7 @@ void game_prepare()
     //設定遊戲人數    
     PLAYERS_NUM = scan(4, 7, "Input the numbers of players (4~7): ");
     PLAYERS_LIST = (Player*)calloc( PLAYERS_NUM, sizeof(Player) );
+    DEAD_LIST = (Player*)calloc( PLAYERS_NUM, sizeof(Player) );
     //設定遊戲玩家名稱
     char *players = calloc(100, sizeof(char));
     for(int i = 0; i < PLAYERS_NUM; i++)
@@ -272,9 +267,12 @@ void print_card(Card i)
 }
 
 
-void playerCard( Player *player, int numOfBang ) {
+void playerCard( Player *player, int *numOfBang ) {
     int *color = NULL;
     int num = setColor( &color, -1, -1, 1, player->handcard, 3 );
+    if ( *numOfBang == 0 ) {
+        setColor( &color, -1, BANG, 0, player->handcard, 0 );
+    }
     if ( num == 0 ) {
         puts("No hand card");
         player->state = DISCARD_CARD;
@@ -309,21 +307,68 @@ void playerCard( Player *player, int numOfBang ) {
                 warn = false;
                 if ( tmp.sticker == BANG ) {
                     if ( Bang( player ) ) {
+                      discardCard( player->handcard, choice-1 );
+                    }
+                }
+                else if ( tmp.sticker == INDIANS ) {
+                    if ( Indians( player ) ) {
                         discardCard( player->handcard, choice-1 );
-                        printf( "use card\n" );
-                    }  
+                    }
+                }
+                else if ( tmp.sticker == STAGECOACH ) {
+                    if ( Stagecoach( player ) ) {
+                        discardCard( player->handcard, choice-1 );
+                    }
+                }
+                else if ( tmp.sticker == STORE ){
+                    if ( Store( player ) ) {
+                        discardCard( player->handcard, choice-1 );
+                    }
+                }
+                else if ( tmp.sticker == BEER ) {
+                    if ( Beer( player, player ) ) {
+                        discardCard( player->handcard, choice-1 );
+                    }
+                }
+                else if ( tmp.sticker == SALOOW ) {
+                    if ( Saloow( player ) ) {
+                        discardCard( player->handcard, choice-1 );
+                    }
+                }
+                else if ( tmp.sticker == DUEL ) {
+                    if ( Duel( player ) ) {
+                        discardCard( player->handcard, choice-1 );
+                    }
+                }
+                else if ( tmp.sticker == SCOPE ) {
+                    EquipScope( player, choice-1 );
+                }
+                else if ( tmp.sticker == MUSTANG ) {
+                    EquipMustang( player, choice-1 );
+                }
+                else if ( tmp.sticker == VOLCANIC ) {
+                    EquipVolcanic( player, choice-1 );
+                }
+                else if ( tmp.sticker == SCHOFIELD ) {
+                    EquipSchofield( player, choice-1 );
+                }
+                else if ( tmp.sticker == REMINGTON ) {
+                    EquipRemington( player, choice-1 );
+                }
+                else if ( tmp.sticker == REV ) {
+                    EquipRev( player, choice-1 );
+                }
+                else if ( tmp.sticker == WINCHEDTER ) {
+                    EquipWinchester( player, choice-1 );
                 }
                 break;
-            }else {
+            }
+            else {
                 warn = false;
                 color[choice-1] = 3;
                 continue;
             }
-        }
-        else {
-            warn = true;
-            continue;
-        }
+          }
     }
     free( str );
 }
@@ -336,13 +381,12 @@ int main()
     int i = SHERIFF_POSITION; //從警長開始
     int numOfBang = PLAYERS_LIST[i].numOfBang; // -1表示可以連續無限次
     Player *p = &(PLAYERS_LIST[i]);
-  
 
     // 發牌給所有玩家
     if ( GAME_STATE == NOT_YET_START ) {
         for ( int i = 0; i <= PLAYERS_NUM; i++ ) {
           cardHandler( PLAYERS_LIST + i, PLAYERS_LIST[i].hp );
-          PLAYERS_LIST[i].hp = JUDGE;
+          PLAYERS_LIST[i].state = JUDGE;
           
         }
         GAME_STATE = IN_ROUND;
@@ -372,7 +416,7 @@ int main()
         }
         else if ( p->state == PLAY_CARD )
         {
-            playerCard(p, 1);
+            playerCard(p, &numOfBang);
         }
         else if ( p->state == DISCARD_CARD )
         {
@@ -380,12 +424,11 @@ int main()
         }
         else if( p->state == FINISH_TIHS_TURN )
         {
-            break;
-            // i++;
-            // if ( i == PLAYERS_NUM ) i = 0;
-            // p = &(PLAYERS_LIST[i]);
-            // PLAYERS_LIST[i].state = JUDGE;
-            // numOfBang = PLAYERS_LIST[i].numOfBang;
+            i++;
+            if ( i == PLAYERS_NUM ) i = 0;
+            p = &(PLAYERS_LIST[i]);
+            PLAYERS_LIST[i].state = JUDGE;
+            numOfBang = PLAYERS_LIST[i].numOfBang;
         }
         
     }
@@ -394,4 +437,84 @@ int main()
     return 0;
 }
 
+    /* test INDIANS Card
+    Card c;
+    c.kind = INDIANS;
+    c.sticker = INDIANS;
+    c.number = 13;
+    c.suit = 3;
+    c.attribute = 1;
+    push_back( p->handcard, c );
+    */
+    /* test STAGECOACH Card
+    Card c;
+    c.kind = STAGECOACH;
+    c.sticker = STAGECOACH;
+    c.number = 9;
+    c.suit = 1;
+    c.attribute = 1;
+    push_back( p->handcard, c );
+    */
+    /* test STORE Card
+    Card c;
+    c.kind = STORE;
+    c.sticker = STORE;
+    c.number = 9;
+    c.suit = 1;
+    c.attribute = 1;
+    push_back( p->handcard, c );
+    */
+    /* test DUEL card
+    Card c;
+    c.kind = DUEL;
+    c.sticker = DUEL;
+    c.number = 9;
+    c.suit = 1;
+    c.attribute = 1;
+    push_back( p->handcard, c );
+    */
+    /* test Scope card
+    Card c;
+    c.kind = SCOPE;
+    c.sticker = SCOPE;
+    c.number = 9;
+    c.suit = 1;
+    c.attribute = 1;
+    push_back( p->handcard, c );
+    push_back( p->handcard, c );
+    */
+    /* test Mustang card
+    Card c;
+    c.kind = MUSTANG;
+    c.sticker = MUSTANG;
+    c.number = 9;
+    c.suit = 1;
+    c.attribute = 1;
+    push_back( p->handcard, c );
+    push_back( p->handcard, c );
+    */
+    /* test distance item card
+    Card c;
+    c.kind = VOLCANIC;
+    c.sticker = VOLCANIC;
+    c.number = 9;
+    c.suit = 1;
+    c.attribute = 1;
+    push_back( p->handcard, c );
 
+    c.kind = SCHOFIELD;
+    c.sticker = SCHOFIELD;
+    push_back( p->handcard, c );
+
+    c.kind = REMINGTON;
+    c.sticker = REMINGTON;
+    push_back( p->handcard, c );
+
+    c.kind = REV;
+    c.sticker = REV;
+    push_back( p->handcard, c );
+
+    c.kind = WINCHEDTER;
+    c.sticker = WINCHEDTER;
+    push_back( p->handcard, c );
+    */

@@ -196,7 +196,11 @@ void fJesse_Jones( void* this, void* argv ){
 };
 
 //    內建酒桶 若有兩個可以執行兩次
-void fJourdonnais( void* this, void* argv ) {}
+void fJourdonnais( void* this, void* argv ) {
+    if ( this == NULL ) return;
+    Player* player = (Player*)this;
+    
+}
 
 //    如果是抽牌階段 -> 抽三張牌 -> 選一張丟棄
 void fKit_Carlson( void* this, void* argv ) {

@@ -17,3 +17,5 @@ void shuffle();
 bool takeCard( Card_vector *p1, Card_vector *p2, int index );
 void discardAllCard( Player *player );
 void takeAllCards( Player *p1, Player *p2 );
+int find_sticker( Card_vector *card, Kind kind );
+void setPlayer( Player *p1, Player *p2 );
