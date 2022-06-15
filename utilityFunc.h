@@ -19,3 +19,6 @@ void discardAllCard( Player *player );
 void takeAllCards( Player *p1, Player *p2 );
 int find_sticker( Card_vector *card, Kind kind );
 void setPlayer( Player *p1, Player *p2 );
+int find_position( int id );
+int min(int a, int b);
+void calcDistance() ;

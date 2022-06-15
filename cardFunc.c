@@ -1,4 +1,4 @@
-#include "cardFunc.h"
+ #include "cardFunc.h"
 
 void HPModify( Player* attacker, Player *defender, int n, Kind reason ){
   if ( n < 0 ) {
@@ -22,22 +22,22 @@ void IsGameOver( Player *killer, Player *player ){
     ;
   if ( player->hp <= 0 ) {
     player->state = IS_DEAD;
-    PLAYERS_NUM--;
-    
+    ALIVE_NUM--;
+
     // remove the player from the player list
-    int k = 0;
-    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-        if ( player->id == PLAYERS_LIST[i].id ) {
-            k = i;
-            break;
-        }
-    }
-    // increase the information in DEAD_LIST
-    DEAD_LIST[DEAD_NUM].name = PLAYERS_LIST[k].name;
-    DEAD_LIST[DEAD_NUM++].identity = PLAYERS_LIST[k].identity;
-    for ( int i = k; i < PLAYERS_NUM-1; i++ ) {
-        PLAYERS_LIST[i] = PLAYERS_LIST[i+1];
-    }
+    int k = find_position(player->id);  
+    // int k = 0;
+    // for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+    //     if ( player->id == PLAYERS_LIST[i].id ) {
+    //         k = i;
+    //         break;
+    //     }
+    // }
+      
+
+    // for ( int i = k; i < PLAYERS_NUM-1; i++ ) {
+    //     PLAYERS_LIST[i] = PLAYERS_LIST[i+1];
+    // }
     printf( "Player %s is dead and his identity is %s\n", player->name, identityName[player->identity] );
     switch ( player->identity ) {
       case Sheriff:
@@ -75,14 +75,6 @@ void IsGameOver( Player *killer, Player *player ){
                 printf("Player %s\n", PLAYERS_LIST[i].name);  
             }
         }
-        // 死亡的歹徒
-        for(int i = 0; i < DIE_NUM; i++) {
-            if( DEAD_LIST[i].identity == Outlaws ) {
-                printf("Player %s\n", DEAD_LIST[i]);  
-                return; 
-            }
-        }
-        return;
     } else if ( OUTLAWS_NUM + RENEGADE_NUM == 0 ) {
         GAME_STATE = END
         // set winner(警長副警長)
@@ -93,15 +85,7 @@ void IsGameOver( Player *killer, Player *player ){
             if( p.identity == Deputies ) {
                 printf("Player %s\n", PLAYERS_LIST[i]);              
             }
-        }
-        // 死亡的副警長
-        for(int i = 0; i < DEAD_NUM; i++) {
-            if( DEAD_LIST[i].identity == Deputies ) {
-                printf("Player %s\n", DEAD_LIST[i]);  
-                return; 
-            }
-        }
-        return;
+        } 
     }
       
     if ( killer != NULL ) { 
@@ -135,7 +119,9 @@ Player *choosePlayer( Player *attacker, int limitDistance ) {
     printf("Which player to attack: \n");
     printf("Choice   Name    ID\n");
     for(int i = 0; i < PLAYERS_NUM; i++) {
-        p = PLAYERS_LIST + i;           
+        p = PLAYERS_LIST + i;  
+        
+        
         int distance = DISTANCE[attacker->id][p->id];
         if( p->id != attacker->id && distance <= limitDistance ) {
             printf("[%d] %10s %7d \n", id_count, p->name, p->id);
@@ -215,7 +201,6 @@ bool chooseCard( Player *player, Card_vector* cards, Kind kind ) {
 
 
 // orange card
-
 bool Bang( Player *attacker ){
   if ( attacker == NULL ) return false;
   int limitDistance = attacker->attack_distance;
@@ -251,9 +236,7 @@ bool Gatling( Player *attacker ) {
         p = PLAYERS_LIST + i;  
         // 如果不是自己        
         if( p->id != attacker->id ) {
-            // if(/*啤酒桶*/) {
-                
-            // } 
+            // 啤酒桶包在 MISS 內
             if( Miss(p, 1) ) {                
                 printf("%10s %7d avoid attack.\n", p->name, p->id);
             }else {
@@ -334,9 +317,51 @@ bool Indians( Player *attacker ) {
 }
 
 //從距離為1的玩家拿取一張牌
+// 野馬和望遠鏡可以改變距離，可以拿取玩家的一張手牌或是玩家面前的裝備或武器，也可以拿場面的炸藥到自己手牌
+// 除了監獄 ---> not implement yet, implement later
 bool panic( Player *attacker ){
   if(attacker == NULL) return false;
-  int att_arr = 0;
+  Player *choose_player = choosePlayer( player, 1 );
+  bool is_choose = false;
+
+  while ( !is_choose ) {
+    printUI( player );
+    puts( "Choose the item you want to take" );
+    puts( "[0] Quit [1] handcard [2] weapon [3] shield [4] distance item [5] judgement card" );
+    int choice = scan( 0, 5, "" );
+    switch ( choice ) {
+      0:
+        puts( "Give up to use the card" );
+        ENTER;
+        return false;
+      1: // get handcard
+        is_choose = chooseCard( player, choose_player->handcard, -1, player->handcard );
+        break;
+      2:
+        is_choose = chooseCard( player, choose_player->weapon, -1, player->handcard );
+        break;
+      3:
+        is_choose = chooseCard( player, choose_player->shield, -1, player->handcard );
+        break;
+      4:
+        is_choose = chooseCard( player, choose_player->distance_item, -1, player->handcard );
+        break;
+      5:
+        is_choose = chooseCard( player, choose_player->judgeCards, -1, player->handcard );
+        break;
+    }
+    
+  }
+
+  printUI( player );
+  printf( "Get the card from %s\n", choose_player->name );
+  ENTER;
+  return true;
+
+  
+
+  
+  int att_arr = find_position( attacker->id );
   char *str = malloc(1000);
   int *store_position = (int *)calloc(PLAYERS_NUM,sizeof(int));
   for(int i=0;i<PLAYERS_NUM;i++)
@@ -372,6 +397,7 @@ bool panic( Player *attacker ){
       counter++;
     }
   }
+
   int choose_player = scan(0,counter-1, str);
   int array_position= store_position[choose_player];
 
@@ -385,12 +411,13 @@ bool panic( Player *attacker ){
   printf("Player %s has %d card(s) (choose from 0 to %d)\n",PLAYERS_LIST[array_position].name,max,max-1);
   int which_card = scan(0,max-1,"Choose the card you want: \n");
   takeCard( PLAYERS_LIST[array_position].handcard, attacker->handcard, which_card );
-
+  // if() 
   free(str);
   free(store_position);
   return true;
 }
 
+// 類似 panic
 void cat_respond( Player *defender ) {
     printf("You need to discard a card (0 : handcard, 1 : equipment): \n");
     int choice = scan(0, 1, "--> ");
@@ -483,21 +510,12 @@ bool cat( Player *attacker ) {
     Player *p;  
     int *INDEX = malloc(PLAYERS_NUM), id_count = 0; 
     printf("Which player to discard a card: \n");
-    printf("Choice   Name    ID\n");
-    for(int i = 0; i < PLAYERS_NUM; i++) {
-        p = PLAYERS_LIST + i;  
-        int card_size = p->handcard->size + p->weapon->size;
-        card_size += defender->shield->size + defender->distance_item->size;
-        // 如果不是自己且至少有一張手牌或裝備牌   
-        if( p->id != attacker->id && card_size > 0) {
-            INDEX[id_count++] = i;
-            printf("[%d] %10s %7d \n", id_count, p->name, p->id);
-        }            
-    }
-    if ( id_count <= 0 ) {
-        printf("No one have any card to discard.\n");
-        return;
-    }
+    Player *choose_player = choosePlayer( attacker, -1 );
+    
+    // if ( id_count <= 0 ) {
+    //     printf("No one have any card to discard.\n");
+    //     return;
+    // }
     int choice = scan(0, id_count-1, "--> ");
     // call PLAYERS_LIST[choice] to discard a card.
     cat_respond( PLAYERS_LIST[INDEX[choice]] );
@@ -858,7 +876,6 @@ bool EquipJail( Player *player ) {
 
     printf( "Player %s is in JAIL.\n", PLAYERS_LIST[id[choice]].name );
     takeCard( player->handcard, PLAYERS_LIST[id[choice]]->judgeCards, index ); 
-    // 改狀態    
     return true;
 }
 
@@ -888,13 +905,13 @@ bool UnloadJail( Player *player, Card *card ) {
   card為指定判定的牌，若card == NULL，則在function中抽一張
 */
 
-bool EquipDynamite( Player *player ) {
-    if ( player == NULL ) return false;
-    int index = find_sticker( player->handcard, DYNAMITE );
-    if( index == -1 ) {
-        puts( "You didn't have card DYNAMITE.");
-        return false;
-    }
+bool EquipDynamite( Player *player, int index ) {
+    // if ( player == NULL ) return false;
+    // int index = find_sticker( player->handcard, DYNAMITE );
+    // if( index == -1 ) {
+    //     puts( "You didn't have card DYNAMITE.");
+    //     return false;
+    // }
     
     takeCard( player->handcard, player->judgeCards, index );   
     return true;

@@ -68,6 +68,10 @@ bool discardCard( Card_vector * cards, int index ) {
     if ( cards->size <= index ) return false;
     Card tmp = get_element( cards, index);
     remove_element((cards), index);
+    // 如果是內建則直接丟棄
+    // if( tmp.suit == -1 ) {
+    //     return false;
+    // }
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
     return false;
@@ -76,29 +80,42 @@ bool discardCard( Card_vector * cards, int index ) {
 // 棄掉所有的牌，包含手牌、装備
 void discardAllCard( Player *player ) {
     if ( player == NULL ) return;
-    for ( int i = 0; i < player->handcard->size; i++ ) {
+    while ( !isEmpty( player->handcard ) ) {
         Card tmp = pop_back(player->handcard);
         tmp.sticker = tmp.kind;
         push_back(discardPile, tmp);
     }
-    for ( int i = 0; i < player->weapon->size; i++ ) {
+    while ( !isEmpty( player->weapon ) ) {
         Card tmp = pop_back(player->weapon);
         tmp.sticker = tmp.kind;
         push_back(discardPile, tmp);
     }
-    for ( int i = 0; i < player->shield->size; i++ ) {
+    player->equipWeapon = NONE;
+    while ( !isEmpty(player->shield) ) {
         Card tmp = pop_back(player->shield);
+        // 如果是內建則直接丟棄
+        // if( tmp.suit == -1 ) {
+        //     return false;
+        // }
         tmp.sticker = tmp.kind;
         push_back(discardPile, tmp);
     }
-    for ( int i = 0; i < player->distance_item->size; i++ ) {
+    player->equipShield = NONE;
+    while ( !isEmpty( player->distance_item ) ) {
         Card tmp = pop_back(player->distance_item);
         tmp.sticker = tmp.kind;
         push_back(discardPile, tmp);
     }
+    player->equipScope = NONE;
+    player->equipMustang = NONE;
+
+    while ( !isEmpty( player->judgeCards ) ) {
+        Card tmp = pop_back(player->judgeCards);
+        tmp.sticker = tmp.kind;
+        push_back(discardPile, tmp);
+    }
+    
 }
-
-
 
 void printCard( Card card ) 
 {
@@ -193,30 +210,88 @@ int find_sticker( Card_vector *card, Kind kind ) {
     return -1;
 }
 
-// p1 <- p2, i.e. p1 = p2;
-void setPlayer( Player *p1, Player *p2 ) {
-    p1->id = p2->id;
-    p1->hp = p2->hp;
-    p1->hp_limit = p2->hp_limit;
-    delete_vector( p1->handcard );
-    p1->handcard = p2->handcard;
-    delete_vector( p1->weapon );
-    p1->weapon = p2->weapon;
-    delete_vector( p1->shield );
-    p1->shield = p2->shield;
-    delete_vector( p1->distance_item );
-    p1->distance_item = p2->distance_item;
-    delete_vector( p1->judgeCards );
-    p1->judgeCards = p2->judgeCards;
-    
-    p1->attack_distance = p2->attack_distance;
-    p1->equipWeapon = p2->equipWeapon;
-    p1->equipShield = p2->equipShield;
-    p1->equipScope = p2->equipScope;
-    p1->equipMustang = p2->equipMustang;
-    p1->role = p2->role;
-    p1->state = p2->state;
-    p1->identity = p2->identity;
-    p1->numOfBang = p2->numOfBang;
-    strcpy(p1->name, p2->name);
-}  
+int find_position( int id ) {
+  
+  for(int i=0; i<PLAYERS_NUM; i++ ) {
+     Player *p = PLAYERS_LIST + i;
+      if(p->id == id ) {
+        return i;
+      }
+  }
+
+  return -1;
+}
+
+int min(int a, int b)
+{
+  if(a<=b)
+  {
+    return a;
+  }
+  else
+  {
+    return b;
+  }
+}
+
+void calcDistance() {
+  int tmpArr[10][10] = {0};
+  for(int i=0;i<ALIVE_NUM;i++)
+  {
+    for(int j=0; j<ALIVE_NUM; j++)
+    {
+      int tmp = 0;
+      if(i>=j)
+      {
+        tmp = (ALIVE_NUM-i)+(j-0);
+      }
+      else
+      {
+        tmp = (i-0)+(ALIVE_NUM-j);
+      }
+      tmpArr[i][j] = min(abs(i-j),tmp);
+    }
+  }
+
+  int k = 0, l = 0;
+  for ( int i = 0, k = 0; i < PLAYERS_NUM; i++ ) {
+    Player *p = PLAYERS_LIST + i;
+    if ( p->state == IS_DEAD ) {
+      memset( DISTANCE[i], 0, 10 );
+      memset( OFFSET_DISTANCE[i], 0, 10 );
+      continue;
+    }
+    for ( int j = 0, l = 0; j < PLAYERS_NUM; j++ ) {
+      p = PLAYERS_LIST + j; 
+      if ( p->state == IS_DEAD ) {
+        DISTANCE[i][j] = 0;
+        OFFSET_DISTANCE[i][j] = 0;
+      } 
+      else {
+        DISTANCE[i][j] = OFFSET_DISTANCE[i][j] + tmpArr[k][l];
+        l++;
+      }
+    }
+    k++;
+  }
+
+  // puts( "tmpArr" );
+  // for(int i=0;i<ALIVE_NUM;i++)
+  // {
+  //   for(int j=0; j<ALIVE_NUM; j++)
+  //   {
+  //     printf( "%d ", tmpArr[i][j] );
+  //   }
+  //   puts("");
+  // }
+
+  // puts( "Distance" );
+  // for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+  //   for ( int j = 0; j < PLAYERS_NUM; j++ ) {
+  //     printf( "%d ", DISTANCE[i][j] );
+  //   }
+  //   puts("");
+  // }
+  
+  
+}

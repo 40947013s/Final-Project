@@ -72,8 +72,8 @@ bool UnloadJail( Player *player, Card *card );
   card為指定判定的牌，若card == NULL，則在function中抽一張
 */
 
-// bool EquipDynamite( Player *player );
-// bool UnloadDynamite( Player *player );
+// bool EquipDynamite( Player *player ); 
+// bool UnloadDynamite( Player *player ); // unuse
 
 // bool EquipSchofield( Player *player );
 // bool UnloadSchofield( Player *player );

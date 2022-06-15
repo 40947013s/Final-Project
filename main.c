@@ -17,21 +17,23 @@
 int PLAYERS_NUM, DEAD_NUM; //遊戲人數
 int SHERIFF_NUM, DEPUTIES_NUM, OUTLAWS_NUM, RENEGADE_NUM; //身分人數
 int SHERIFF_POSITION;
-int DISTANCE[7][7]; //相對距離表 distance[i][j]: i 看 j
+int DISTANCE[10][10]; //相對距離表 distance[i][j]: i 看 j
+int OFFSET_DISTANCE[10][10];
 GMode GAME_STATE; //遊戲狀態
 Card CARD[80]; //消耗牌+裝備牌
 Player *PLAYERS_LIST; //玩家狀態紀錄
 Player *DEAD_LIST; //死亡玩家狀態紀錄
+int ALIVE_NUM;
 
 Card_vector* deck;
 Card_vector* discardPile;
 
-// typedef void (*Skills) ( void *this, void* argv );
+// typedef void (*Skills) ( void *this, void* argv ); fEl_Gringo
 Skill skills[16] = {
-    fBart_Cassidy, fBlack_Jack, fCalamity_Janet, fEl_Gringo, 
-    fJesse_Jones, fJourdonnais, fKit_Carlson, fLucky_Duke,
+    fBart_Cassidy, fBlack_Jack, fCalamity_Janet, nullFunc,
+    fJesse_Jones, fJourdonnais, fKit_Carlson, nullFunc,
     fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
-    fSlab_the_Killer, fSuzy_Lafayette, fVulture_Sam, fWilly_the_Kid
+    fSlab_the_Killer, fSuzy_Lafayette, nullFunc, fWilly_the_Kid
 };
 
 // 身分 
@@ -60,17 +62,9 @@ char *suitName[] = { "none", "spade", "heart", "diamond", "club" };
 // Color
 char *Color[9] = { RESET, RED, YELLOW, GREEN, BLUE, MAG, CYN, WHT, RED_BACK };
 
-int min(int a, int b)
-{
-  if(a<=b)
-  {
-    return a;
-  }
-  else
-  {
-    return b;
-  }
-}
+// State
+char *stateName[10] = { "SET", "JUDGE", "GET_CARD", "PLAY_CARD", "DISCARD_CARD", "MINUS_HP", "FIGHT", "ATTACKED", "FINISH", "DEAD"};
+
 void init_player(Player *i)
 {
     i->hp = 0;
@@ -78,6 +72,7 @@ void init_player(Player *i)
     i->handcard = create_vector(10);
     i->judgeCards = create_vector(5);
     i->attack_distance = 1;
+    i->attack_power = 1;
     i->equipWeapon = NONE;
     i->weapon = create_vector(5);
     i->equipShield = NONE;
@@ -99,8 +94,9 @@ int identity_shuffle() {
         Identity tmp = PLAYERS_LIST[i].identity;
         PLAYERS_LIST[i].identity = PLAYERS_LIST[j].identity;
         PLAYERS_LIST[j].identity = tmp;
-        if(j == res) res = i;
-        if(i == res) res = j;
+
+        if( PLAYERS_LIST[j].identity == Sheriff ) res = j;
+        if( PLAYERS_LIST[i].identity == Sheriff ) res = i;
     }
     return res;
 }
@@ -129,37 +125,21 @@ void role_shuffle() {
         } else {
             PLAYERS_LIST[i].role = k, res = k;
         }
-        printf( "Your role: %s\n", roleName[res] );
+        printf( "Your role: %s\n\n", roleName[res] );
         PLAYERS_LIST[i].hp = 4, PLAYERS_LIST[i].hp_limit = 4;
         if( res == El_Gringo || res == Paul_Regret ) {
             PLAYERS_LIST[i].hp --, PLAYERS_LIST[i].hp_limit --;
         }
     }
-  
-    // srand(time(NULL));
-    // bool is_take[16] = {0};
-    // int num = PLAYERS_NUM*2, choice = -1, last = -1;
-    // for (int i = 0; i < num; i++) {
-    //     int j = rand() % 16;
-    //     if (is_take[j]) {
-    //         i--;
-    //         continue;
-    //     }
-    //     is_take[j] = true;
-    //     if(i%2 == 1) {  
-    //         choice = scan(0, 1, "Which role card to choose (0 or 1): ");
-    //         int c = choice == 0 ? (last-1) : (j-1);
-    //         PLAYERS_LIST[i/2].role = c;            
-    //     } last = j;
-    // }
 }
 
 void game_prepare()
 {
     //設定遊戲人數    
     PLAYERS_NUM = scan(4, 7, "Input the numbers of players (4~7): ");
+    ALIVE_NUM = PLAYERS_NUM;
     PLAYERS_LIST = (Player*)calloc( PLAYERS_NUM, sizeof(Player) );
-    DEAD_LIST = (Player*)calloc( PLAYERS_NUM, sizeof(Player) );
+    
     //設定遊戲玩家名稱
     char *players = calloc(100, sizeof(char));
     for(int i = 0; i < PLAYERS_NUM; i++)
@@ -172,24 +152,11 @@ void game_prepare()
         strcpy(PLAYERS_LIST[i].name, players);
         //printf("%s\n",PLAYERS_LIST[i].name);
     }
+  
+    memset( OFFSET_DISTANCE, 0, 100 * sizeof(int) );
+    memset( DISTANCE, 0, 100 * sizeof(int) );
 
-    //設定座位    
-    for(int i=0;i<7;i++)
-    {
-      for(int j=0;j<7;j++)
-      {
-        int tmp = 0;
-        if(i>=j)
-        {
-          tmp = (7-i)+(j-0);
-        }
-        else
-        {
-          tmp = (i-0)+(7-j);
-        }
-        DISTANCE[i][j] = min(abs(i-j),tmp);
-      }
-    }
+    calcDistance();
     
     //設定身分人數
     SHERIFF_NUM = 1, RENEGADE_NUM = 1;
@@ -274,8 +241,10 @@ void playerCard( Player *player, int *numOfBang ) {
         setColor( &color, -1, BANG, 0, player->handcard, 0 );
     }
     if ( num == 0 ) {
-        puts("No hand card");
+        puts("No cards available");
         player->state = DISCARD_CARD;
+        puts( "State: Player Card -> Discard Card" );
+        ENTER;
         return;
     }
 
@@ -297,7 +266,6 @@ void playerCard( Player *player, int *numOfBang ) {
         }
         else if ( color[choice-1] == 3 ) {
             color[choice-1] = 1;
-            system("clear");
             printUI( player );
             printHandCard( player->handcard, color);
             Card tmp = get_element( player->handcard, choice-1 );
@@ -307,7 +275,8 @@ void playerCard( Player *player, int *numOfBang ) {
                 warn = false;
                 if ( tmp.sticker == BANG ) {
                     if ( Bang( player ) ) {
-                      discardCard( player->handcard, choice-1 );
+                        discardCard( player->handcard, choice-1 );
+                        *numOfBang = *numOfBang - 1;
                     }
                 }
                 else if ( tmp.sticker == INDIANS ) {
@@ -361,16 +330,124 @@ void playerCard( Player *player, int *numOfBang ) {
                 else if ( tmp.sticker == WINCHEDTER ) {
                     EquipWinchester( player, choice-1 );
                 }
+                else if ( tmp.sticker == WELLS ) {
+                    if ( Wells( player ) ) {
+                        discardCard( player->handcard, choice-1 );
+                    }
+                }
                 break;
             }
             else {
                 warn = false;
                 color[choice-1] = 3;
                 continue;
-            }
-          }
+            } 
+        }
+        else {
+            warn = true;
+            continue;
+        }
     }
     free( str );
+}
+
+bool judgeFunc( Player *player, int kind ) {
+    Card card = getJudgementCard( player );
+    puts( "Judge card: " );
+    printcard( card );
+  
+    if ( kind == JAIL ) {
+        if ( card.suit == 2 ) return true; // 玩家越獄成功，棄掉監獄繼續進行回合
+        else return false; // 棄掉監獄並暫停一回合
+    }
+    if ( kind == DYNAMITE ) {
+      if ( card.suit == 1 && ( card.number >= 2 && card.number <= 9 ) ) 
+        return false; // 玩家立刻損失3點血量並棄掉此牌繼續進行回合
+      else return true; // 將炸藥傳給左手邊的玩家
+    }
+
+    if ( kind == BARREL ) {
+      if ( card.suit == 2 ) return true;
+      else return false;
+    }
+}
+
+// 判斷階段：炸藥->監獄
+void judgeTurn( Player *player, Player *nextPlayer ) {
+  
+  bool judge = false;
+  // 判斷炸藥
+  for ( int i = 0; i < player->judgeCards->size; i++ ) {
+    Card card = get_element( player->judgeCards, i );
+    if ( card.kind == DYNAMITE ) {
+      printUI( player );
+      puts( "Judge dynamite" );
+      judge = judgeFunc( player, DYNAMITE );
+      if ( judge ) {
+        puts( "Judgment successful" );
+        takeCard( player->judgeCards, nextPlayer->judgeCards, i );
+      }
+      else {
+        puts( "Judgment failed" );
+        printf( "Player %s loses 3 hp" );
+        ENTER;
+        HPModify( NULL, player, -3, DYNAMITE );
+        if ( GAME_STATE == 0 ) return;
+      }
+    }
+  }
+
+  // 判斷監獄
+  for ( int i = 0; i < player->judgeCards->size; i++ ) {
+    if ( card.kind == JAIL ) {
+      printUI( player );
+      puts( "Judge jail" );
+      judge = judgeFunc( player, 0 ), JAIL );
+      discardCard( player->judgeCards, i );
+  
+      if ( judge ) {
+        puts( "The jailbreak is successful, you can continue this round." );
+      }
+      else{
+        puts( "If the jailbreak fails, this round will be suspended once." );
+        player->state = DISCARD_CARD;
+      }
+    }
+  }
+
+  if ( player->state = JUDGE ) {
+    player->state = GET_CARD;
+    puts( "State: Judge -> Get Card" );
+  }
+  else {
+    puts( "State: Judge -> Discard Card" );
+  }
+  ENTER;
+}
+
+void discardTurn( Player *player ) {
+    if( player->handcard->size <= player->hp ) {
+        return; // 少於hp不用丟
+    }
+    
+    if( player->state == IS_DEAD ) {
+        return; // 死了
+    }
+    
+    int num = player->handcard->size - player->hp;
+    bool is_discard = false;
+    while ( num ) {
+      printfUI( player );
+      printf("You have to discard %d handcard(s)\n", num );
+      is_discard = chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_card );
+      if ( is_discard ) num--;
+    }
+    // for(int i = 0; i < num; i++) {
+    //     int size = player->handcard->size;
+    //     int choice = scan(0, size-1, "--> ");
+    //     discardCard( player->handcard, choice );
+    // }
+    
 }
 
 int main()
@@ -386,25 +463,34 @@ int main()
     if ( GAME_STATE == NOT_YET_START ) {
         for ( int i = 0; i <= PLAYERS_NUM; i++ ) {
           cardHandler( PLAYERS_LIST + i, PLAYERS_LIST[i].hp );
-          PLAYERS_LIST[i].state = JUDGE;
+          PLAYERS_LIST[i].state = FINISH_TIHS_TURN;
           
         }
         GAME_STATE = IN_ROUND;
     }
     
-    while ( GAME_STATE != END ) 
+    while ( GAME_STATE == IN_ROUND && GAME_STATE != END ) 
     {
         printUI( p );
-        
-        // skills[p->role]( &p, NULL );
 
-        if ( p->state == SET )
+        // call skill function
+        // for ( int j = 0; j < 15; j++ ) {
+        //   skills[(PLAYERS_LIST + j))->role]( &p );
+        // }
+
+        // if ( p->state == SET )
+        // {
+        //   p->state = JUDGE;
+        // }
+        if ( p->state == JUDGE )
         {
-          p->state = JUDGE;
-        }
-        else if ( p->state == JUDGE )
-        {
-          p->state = GET_CARD;
+          // find next player
+          int j = i;
+          do {
+            j++;
+            if ( j == PLAYERS_NUM ) j = 0;  
+          } while ( PLAYERS_LIST[j].state == IS_DEAD );
+          judgeTurn( p, PLAYERS_LIST+j );
         }
         else if ( p->state == GET_CARD )
         {
@@ -412,28 +498,40 @@ int main()
                 puts( "場上卡片不足" );
                 return 0;
             }
+            puts( "Two cards from the deck" );
             p->state = PLAY_CARD;
+            puts( "State: Get Card -> Player Card" );
+            ENTER;
         }
         else if ( p->state == PLAY_CARD )
         {
             playerCard(p, &numOfBang);
+            p->state = DISCARD_CARD;
         }
         else if ( p->state == DISCARD_CARD )
         {
-            p->state = FINISH_TIHS_TURN;
+          discardTurn( p );
+          p->state = FINISH_TIHS_TURN;
+          puts( "State: Judge -> Get Card" );
+          ENTER;
         }
         else if( p->state == FINISH_TIHS_TURN )
         {
-            i++;
-            if ( i == PLAYERS_NUM ) i = 0;
+            printf( "Player %s ends the round\n", PLAYERS_LIST[i].name );
+            // find next player
+            do {
+              i++;
+              if ( i == PLAYERS_NUM ) i = 0;  
+            } while ( PLAYERS_LIST[i].state == IS_DEAD );
+            
             p = &(PLAYERS_LIST[i]);
             PLAYERS_LIST[i].state = JUDGE;
             numOfBang = PLAYERS_LIST[i].numOfBang;
+            printf( "Player %s starts turn", p->name );
         }
         
     }
     
-
     return 0;
 }
 

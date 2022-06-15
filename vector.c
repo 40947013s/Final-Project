@@ -18,13 +18,14 @@ void delete_vector(Card_vector *v) {
 }
 
 size_t resize_vector(Card_vector *v, size_t n) {
+    
     if(v) {
-        Card *p = (Card*)realloc(v->data, n * sizeof(Card));
+        Card *p = (Card*)realloc(v->data, ( v -> allocate_size + n ) * sizeof(Card));
         if(p) {
             v->data = p;
             v->allocate_size += n;
         }
-        return v->size;
+        return v->allocate_size;
     }
     return 0;
 }
@@ -71,7 +72,7 @@ void clear_vector(Card_vector *v) {
 
 bool isEmpty(Card_vector *v) {
     if(v) {
-        return v->size == 0;
+        return v->size <= 0;
     }
     return true;
 }

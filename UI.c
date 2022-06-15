@@ -1,4 +1,3 @@
-
 #include "UI.h"
 
 void printHandCard( Card_vector *cards, int color[] ) {
@@ -99,16 +98,16 @@ void printUI( Player *nowPlayer ) {
     puts("---------------------------------------------------------------------------------");
     printf( "%-15s", "ID" );
     for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-        printf( "%-15d", PLAYERS_LIST[i].id );
+        printf( "%-18d", PLAYERS_LIST[i].id );
     }
     puts("");
 
     printf( "%-15s", "Name" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( i == indexOfNowPlayer )
-            printf("%s%-15s%s", YELLOW, PLAYERS_LIST[i].name, RESET );
+            printf("%s%-18s%s", YELLOW, PLAYERS_LIST[i].name, RESET );
         else
-            printf("%s%-15s%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].name, RESET );
+            printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].name, RESET );
     }
         
     puts("");
@@ -116,27 +115,27 @@ void printUI( Player *nowPlayer ) {
     printf( "%-15s", "HP" );
     for (int i = 0; i < PLAYERS_NUM; i++){
         if ( i == indexOfNowPlayer )
-            printf("%s%-15d%s", YELLOW, PLAYERS_LIST[i].hp, RESET);
+            printf("%s%-18d%s", YELLOW, PLAYERS_LIST[i].hp, RESET);
         else
-            printf("%s%-15d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].hp, RESET);
+            printf("%s%-18d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].hp, RESET);
     }
     puts("");
 
     printf( "%-15s", "HandCard" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( i == indexOfNowPlayer )
-            printf("%s%-15d%s", YELLOW, PLAYERS_LIST[i].handcard->size, RESET);
+            printf("%s%-18d%s", YELLOW, PLAYERS_LIST[i].handcard->size, RESET);
         else
-            printf("%s%-15d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].handcard->size, RESET );
+            printf("%s%-18d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].handcard->size, RESET );
     }
     puts("");
 
     printf( "%-15s", "Role" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( i == indexOfNowPlayer )
-            printf("%s%-15s%s", YELLOW, roleName[PLAYERS_LIST[i].role], RESET);
+            printf("%s%-18s%s", YELLOW, roleName[PLAYERS_LIST[i].role], RESET);
         else
-            printf("%s%-15s%s", ( i == indexOfSheriff ) ? RED : RESET, roleName[PLAYERS_LIST[i].role], RESET );
+            printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, roleName[PLAYERS_LIST[i].role], RESET );
     }
         
     puts("");
@@ -146,9 +145,36 @@ void printUI( Player *nowPlayer ) {
     for (int i = 0; i < PLAYERS_NUM; i++) {
         int id = PLAYERS_LIST[i].id;
         if ( i == indexOfNowPlayer )
-            printf("%s%-15d%s", YELLOW, DISTANCE[nowPlayerID][id], RESET);
+            printf("%s%-18d%s", YELLOW, DISTANCE[nowPlayerID][id], RESET);
         else
-            printf("%s%-15d%s", ( i == indexOfSheriff ) ? RED : RESET, DISTANCE[nowPlayerID][id], RESET );
+            printf("%s%-18d%s", ( i == indexOfSheriff ) ? RED : RESET, DISTANCE[nowPlayerID][id], RESET );
+    }
+    puts("");
+
+    printf("%-15s", "Identity");
+    for (int i = 0; i < PLAYERS_NUM; i++) {
+        if ( i == indexOfNowPlayer )
+            printf("%s%-18s%s", YELLOW, identityName[PLAYERS_LIST[i].identity], RESET);
+        else
+            printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, identityName[PLAYERS_LIST[i].identity], RESET );
+    }
+    puts("");
+
+    printf("%-15s", "State");
+    for (int i = 0; i < PLAYERS_NUM; i++) {
+        if ( i == indexOfNowPlayer )
+            printf("%s%-18s%s", YELLOW, stateName[PLAYERS_LIST[i].state], RESET);
+        else
+            printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, stateName[PLAYERS_LIST[i].state], RESET );
+    }
+    puts("");
+
+    printf("%-15s", "Attack");
+    for (int i = 0; i < PLAYERS_NUM; i++) {
+        if ( i == indexOfNowPlayer )
+            printf("%s%-18d%s", YELLOW, PLAYERS_LIST[i].attack_distance, RESET);
+        else
+            printf("%s%-18d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].attack_distance, RESET );
     }
     puts("");
 
@@ -156,9 +182,9 @@ void printUI( Player *nowPlayer ) {
     printf( "%-15s", "Weapon" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( isEmpty(PLAYERS_LIST[i].weapon) )
-            printf("%s%-15s%s", RESET, "None", RESET );
+            printf("%s%-18s%s", RESET, "None", RESET );
         else
-            printf("%s%-15s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].weapon, 0).kind], RESET );
+            printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].weapon, 0).kind], RESET );
 
     }
     puts("");
@@ -166,36 +192,36 @@ void printUI( Player *nowPlayer ) {
     printf( "%-15s", "Shield" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( isEmpty(PLAYERS_LIST[i].shield) )
-            printf("%s%-15s%s", RESET, "None", RESET );
+            printf("%s%-18s%s", RESET, "None", RESET );
         else
-            printf("%s%-15s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind], RESET );
+            printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind], RESET );
     }
     puts("");
 
     printf( "%-15s", "Scope" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( PLAYERS_LIST[i].equipScope == NONE )
-            printf("%s%-15s%s", RESET, "None", RESET );
+            printf("%s%-18s%s", RESET, "None", RESET );
         else
-            printf("%s%-15s%s", YELLOW, cardKindName[PLAYERS_LIST[i].equipScope], RESET );
+            printf("%s%-18s%s", YELLOW, cardKindName[PLAYERS_LIST[i].equipScope], RESET );
     }
     puts("");
 
     printf( "%-15s", "Mustang" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( PLAYERS_LIST[i].equipMustang == NONE )
-            printf("%s%-15s%s", RESET, "None", RESET );
+            printf("%s%-18s%s", RESET, "None", RESET );
         else
-            printf("%s%-15s%s", YELLOW, cardKindName[PLAYERS_LIST[i].equipMustang], RESET );
+            printf("%s%-18s%s", YELLOW, cardKindName[PLAYERS_LIST[i].equipMustang], RESET );
     }
     puts("");
 
     printf( "%-15s", "Judge Card" );
     for (int i = 0; i < PLAYERS_NUM; i++) {
         if ( isEmpty(PLAYERS_LIST[i].judgeCards) )
-            printf("%s%-15s", RESET, "None" );
+            printf("%s%-18s", RESET, "None" );
         else
-            printf("%s%-15s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].judgeCards, 0).kind] );
+            printf("%s%-18s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].judgeCards, 0).kind] );
     }
     puts("");
 
