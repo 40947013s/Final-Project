@@ -2,6 +2,7 @@
 #include "defineList.h"
 #include "test.h"
 #include "structList.h"
+#include "init.h"
 
 void fBart_Cassidy( void* this );
 void fBlack_Jack( void* this );

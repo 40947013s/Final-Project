@@ -35,16 +35,16 @@ Skill skills[16] = {
 // } Kind;
 
 // Orange Card
-OrangeCard orangeCards[12] = { Bang, nullFunc2, Indians, nullFunc2, panic,
-                                nullFunc2, Stagecoach, Wells, Store, nullFunc2, Saloow, Duel};
+OrangeCard orangeCards[12] = { Bang, nullFunc2, Gatling, Indians, panic,
+                                cat, Stagecoach, Wells, Store, nullFunc2, Saloow, Duel};
 
 // Blue Card
 BlueCard blueCards[23] = { nullFunc3, nullFunc3, nullFunc3, nullFunc3, nullFunc3,
                             nullFunc3, nullFunc3, nullFunc3, nullFunc3, nullFunc3,
-                            nullFunc3, nullFunc3, nullFunc3,
-                            EquipScope, EquipMustang, nullFunc3, 
+                            nullFunc3, nullFunc3, EquipBarrel,
+                            EquipScope, EquipMustang, EquipJail, 
                             EquipDynamite, EquipVolcanic, EquipSchofield, EquipRemington,
-                            EquipRev, EquipWinchester};
+                            EquipRev, EquipWinchester, nullFunc3 };
 
 
 // 身分 
@@ -62,7 +62,7 @@ char *roleName[] = {
 char *cardKindName[] = {
     "BANG", "MISSED", "GATLING", "INDIANS", "PANIC", 
     "CAT", "STAGECOACH", "WELLS", "STORE", "BEER", 
-    "SALOOW", "DUEL", "BARREL", "SCOPE", "MUSTANG", 
+    "SALLON", "DUEL", "BARREL", "SCOPE", "MUSTANG", 
     "JAIL", "DYNAMITE", "VOLCANIC", "SCHOFIELD", 
     "REMINGTON", "REV", "WINCHEDTER"
 };
@@ -74,7 +74,7 @@ char *suitName[] = { "none", "spade", "heart", "diamond", "club" };
 char *Color[11] = { RESET, RED, YELLOW, GREEN, BLUE, MAG, CYN, WHT, GRAY, GRAY_BACK, RED_BACK };
 
 // State
-char *stateName[10] = { "SET", "JUDGE", "GET_CARD", "PLAY_CARD", "DISCARD_CARD", "MINUS_HP", "FIGHT", "ATTACKED", "FINISH", "DEAD"};
+char *stateName[11] = { "SET", "JUDGE", "GET_CARD", "AFTER_GET", "PLAY_CARD", "DISCARD_CARD", "MINUS_HP", "FIGHT", "ATTACKED", "FINISH", "DEAD"};
 
 void init_player(Player *i)
 {
@@ -215,7 +215,7 @@ void game_prepare()
     role_shuffle();
     for ( int i = 0; i < PLAYERS_NUM; i++ ) {
       Player *p = PLAYERS_LIST + i;
-      // skills[p->role]( &p, NULL );
+       //skills[p->role]( &p, NULL );
     }
     PLAYERS_LIST[SHERIFF_POSITION].hp++;
     PLAYERS_LIST[SHERIFF_POSITION].hp_limit++;    

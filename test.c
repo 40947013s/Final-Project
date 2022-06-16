@@ -6,13 +6,15 @@ void HPModify( Player* attacker, Player *defender, int n, Kind reason ){
     ENTER;
     RMode tmp = defender->state;
     defender->state = MINUS_HP;
-    skills[defender->role]( defender );
-    fEl_Gringo( defender, attacker, n, reason );
+      // printf("%s %s\n", roleName[defender->role], defender->name);
+      // ENTER;
+    // skills[defender->role]( defender );
+    // fEl_Gringo( defender, attacker, n, reason );
     defender->state = tmp;
     defender->hp += n;
   }
   else {
-    printf( "Player %s plus %d hp.\n", attacker->name, n );
+    printf( "Player %s plus %d hp.\n", defender->name, n );
     ENTER;
     defender->hp += n;
   }
@@ -23,10 +25,27 @@ void HPModify( Player* attacker, Player *defender, int n, Kind reason ){
 // if killer is null, then there is no killer
 // e.g. if the player is killed by dynamite, there is no killer
 void IsGameOver( Player *killer, Player *player ){
-  if ( player->hp <= 0 )
-    // call dying function, which can use barrels or some else to add hp
-    ;
   if ( player->hp <= 0 ) {
+// bool Beer( Player *player, killer ); 
+    
+    printf( "You are dying\n" );
+    printf( "Are you going to use beer to add up hp?\n" );
+    int choice = scan( 0, 1, "1: yes, 0: no" );
+    if ( choice == 1 ) {
+      Card beer = chooseCard( player, player->handcard, BEER, NULL, false,  true );
+        if ( beer.number != -1 ) {
+            Beer( player, killer );
+            return;
+        }
+    } else {
+        puts( "You didn't have beer" );
+        ENTER;
+    }
+  }
+
+
+  if ( player->hp <= 0 ) {
+      
     player->state = IS_DEAD;
     ALIVE_NUM--;
 
@@ -129,36 +148,36 @@ void IsGameOver( Player *killer, Player *player ){
 // 選擇攻擊對象
 // if limitDistance == -1 then 沒有距離限制
 Player *choosePlayer( Player *attacker, int limitDistance ) {
-    if ( attacker == NULL ) return NULL;
-    Player *p = NULL; 
-    if( limitDistance == -1 ) limitDistance = 20; //開無限
-    int *ID = malloc(PLAYERS_NUM), id_count = 0;
-    printf("Which player to attack: \n");
-    printf("Choice   Name    ID\n");
-    for(int i = 0; i < PLAYERS_NUM; i++) {
-        p = PLAYERS_LIST + i;    
-        if ( p->state == IS_DEAD ) continue;
-        int distance = DISTANCE[attacker->id][p->id];
-        if( p->id != attacker->id && distance <= limitDistance ) {
-            printf("[%d] %10s %7d \n", id_count, p->name, p->id);
-            ID[id_count++] = p->id;
-        }            
-    }
+  if ( attacker == NULL ) return NULL;
+  Player *p = NULL; 
+  if( limitDistance == -1 ) limitDistance = 20; //開無限
+  int *ID = malloc(PLAYERS_NUM), id_count = 0;
+  printf("Which player to attack: \n");
+  printf("Choice   Name    ID\n");
+  for(int i = 0; i < PLAYERS_NUM; i++) {
+      p = PLAYERS_LIST + i;    
+      if ( p->state == IS_DEAD ) continue;
+      int distance = DISTANCE[attacker->id][p->id];
+      if( p->id != attacker->id && distance <= limitDistance ) {
+          printf("[%d] %10s %7d \n", id_count, p->name, p->id);
+          ID[id_count++] = p->id;
+      }            
+  }
 
-    if ( id_count <= 0 ) {
-        printf("There isn't any players to be chosen.\n");
-        return NULL;
-    } // 沒有可以使用的對象
-  
-    int choice = scan(0, id_count-1, "--> ");
-    for(int i = 0; i < PLAYERS_NUM; i++) {
-        p = PLAYERS_LIST + i;           
-        if( p->id == ID[choice] ) {
-            break;
-        }            
-    }
-    free(ID);
-    return p;
+  if ( id_count <= 0 ) {
+      printf("There isn't any players to be chosen.\n");
+      return NULL;
+  } // 沒有可以使用的對象
+
+  int choice = scan(0, id_count-1, "--> ");
+  for(int i = 0; i < PLAYERS_NUM; i++) {
+      p = PLAYERS_LIST + i;           
+      if( p->id == ID[choice] ) {
+          break;
+      }            
+  }
+  free(ID);
+  return p;
 } 
 
 // if kind == -1, then all the card can be chosen
@@ -166,67 +185,78 @@ Player *choosePlayer( Player *attacker, int limitDistance ) {
 // otherwise discard the chosen card
 // if except == true, then all the card can be chosen except the kind card
 Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_card, bool except,  bool visible ) {
-    Card c;
-    c.number = -1;
-    if ( player == NULL ) return c;
-    if ( cards == NULL ) return c;
+  Card c;
+  c.number = -1;
+  if ( player == NULL ) return c;
+  if ( cards == NULL ) return c;
 
-    printUI( player );
+  printUI( player );
 
-    if ( isEmpty( cards ) ) {
-      printf("There is no card\n");
-      ENTER;
-      return c;
-    }
-    int *color = NULL;
-    int num = setColor( &color, -1, kind, -1, cards, 3 );
-    if ( num == 0 ) {
-      printHandCard( cards, color, visible );
-      printf("No card to choose\n");
-      ENTER;
-      return c;
-    }
-
-    char str[100];
-    sprintf( str, "Choose a card (1~%d, 0: quit): ", cards->size );
-    int choice = 0;
-    bool warn = false;
-    char input[100];
-    while ( 1 ) {
-      printUI( player );
-      if ( warn )
-        printf( "You can't choose this card\n" );
-      printHandCard( cards, color, visible );
-      choice = scan(0, cards->size, str );
-      if ( choice == 0 ) return c;
-      if ( color[choice-1] == 3 ) {
-        warn = false;
-        color[choice-1] = 1; // green to red
-        printUI( player );
-        printHandCard( cards, color, visible );
-        Card tmp = get_element( cards, choice-1 );
-        printf( "Are you sure you want to choose the [%s] card? (Y/n) ", cardKindName[tmp.sticker] );
-        fgets(input, 100, stdin);
-        if ( input[0] == 'Y' || input[0] == 'y' ) {
-          c = get_element( cards, choice-1 );
-          if ( get_card != NULL ) {
-            takeCard( cards, get_card, choice-1 );
-          }
-          else {
-            discardCard( cards, choice-1 );
-          }
-            return c;
-        }else {
-            color[choice-1] = 3; // red to green
-            continue;
-        }
-      }
-      else {
-        warn = true;
-        continue;
-      }
-    }
+  if ( isEmpty( cards ) ) {
+    printf("There is no card\n");
+    ENTER;
     return c;
+  }
+  int *color = NULL;
+  int num = 0;
+
+  if ( !except ) {
+    num = setColor( &color, -1, kind, -1, cards, 3 );
+  }
+  else { // assert except == true
+    num = setColor( &color, -1, -1, -1, cards, 3 );
+    int tmp = setColor( &color, -1, kind, -1, cards, 0 );
+    num -= tmp;
+  }
+  
+  if ( num == 0 ) {
+    printHandCard( cards, color, visible );
+    printf("No card to choose\n");
+    ENTER;
+    return c;
+  }
+
+  char str[100];
+  sprintf( str, "Choose a card (1~%d, 0: quit): ", cards->size );
+  int choice = 0;
+  bool warn = false;
+  char input[100];
+  while ( 1 ) {
+    printUI( player );
+    if ( warn )
+      printf( "You can't choose this card\n" );
+    printHandCard( cards, color, visible );
+    choice = scan(0, cards->size, str );
+    if ( choice == 0 ) return c;
+    if ( color[choice-1] == 3 ) {
+      warn = false;
+      color[choice-1] = 1; // green to red
+      printUI( player );
+      printHandCard( cards, color, visible );
+      Card tmp = get_element( cards, choice-1 );
+      if ( visible )
+        printf( "Are you sure you want to choose the [%s] card? (Y/n) ", cardKindName[tmp.sticker] );
+      fgets(input, 100, stdin);
+      if ( input[0] == 'Y' || input[0] == 'y' || input[0] == '\n' || !visible ) {
+        c = get_element( cards, choice-1 );
+        if ( get_card != NULL ) {
+          takeCard( cards, get_card, choice-1 );
+        }
+        else {
+          discardCard( cards, choice-1 );
+        }
+          return c;
+      }else {
+          color[choice-1] = 3; // red to green
+          continue;
+      }
+    }
+    else {
+      warn = true;
+      continue;
+    }
+  }
+  return c;
 }
 
 // orange card
@@ -262,7 +292,17 @@ bool Miss( Player *defender, int n ) {
   if ( defender == NULL ) return false;
   
   for ( int i = 0; i < defender->shield->size; i++ ) {
-    if ( JudgeBarrel( defender ) ) n--;
+
+    printUI( defender );
+    printf( "%sJudge barrel%s\n", BLUE, RESET );
+    bool result = judgeFunc( defender, BARREL );
+    if ( result )
+      printf( "%sJudgment successful%s\n", GREEN, RESET );
+    else
+      printf( "%sJudgment failed%s\n", RED, RESET );
+    ENTER;
+    
+    if ( result ) n--;
     if ( n == 0 ) return true;
   }
 
@@ -326,7 +366,6 @@ bool Gatling( Player *attacker ) {
           }
           else {
               printf( "successful attack!\n" );
-              ENTER;
               HPModify( attacker, defender, -1, INDIANS );
           }
         }            
@@ -393,7 +432,7 @@ bool Store( Player *player ) {
 // 因為有可能在瀕死時使用，所以須紀錄attacker是誰
 bool Beer( Player *player, Player *attacker ){
   if( player == NULL ) return false;
-  if( ALIVE_NUM==2 )
+  if( ALIVE_NUM == 2 )
   {
     printf("You can not use Beer when only two players left.\n");
     return false;
@@ -421,11 +460,11 @@ bool Saloow( Player *player ){
       continue;
     if( p->hp == p->hp_limit ) //已經是上限
     {
-      printf("Player %s's hp limit reached.\n", player->name);
+      printf("Player %s's hp limit reached.\n", p->name);
       ENTER;    
     }
     else 
-      HPModify( p, p, 1, SALOOW );
+      HPModify( NULL, p, 1, SALOOW );
   }
 
   return true;
@@ -760,7 +799,8 @@ bool UnloadEquip( Player* player, int kind ) {
             return true;
         case VOLCANIC:
             player->equipWeapon = NONE;
-            player->attack_distance = 1; return true;            
+            player->numOfBang = (player->role != Willy_the_Kid) ? 1 : -1;  
+            return true;
         case SCHOFIELD:
             player->equipWeapon = NONE;
             player->attack_distance = 1; return true;            
@@ -962,7 +1002,8 @@ bool EquipDynamite( Player *player, int index ) {
 }
 
 bool EquipJail( Player *player , int index ) {
-    takeCard( player->handcard, player->judgeCards, index );   
+    Player *choose_player = choosePlayer( player, -1 );
+    takeCard( player->handcard, choose_player->judgeCards, index );   
     printUI( player );
     puts( "Equip jail" );
     ENTER;
@@ -977,22 +1018,22 @@ bool EquipBarrel( Player *player, int index ) {
     return true;
 }
 
-bool JudgeBarrel( Player *player ) {
-  bool result = false;
+// bool JudgeBarrel( Player *player ) {
+//   bool result = false;
   
-  for ( int i = 0; i < player->judgeCards->size; i++ ) {
-    printUI( player );
-    printf( "%sJudge barrel%s\n", BLUE, RESET );
-    result = judgeFunc( player, BARREL );
-    if ( result )
-      printf( "%sJudgment successful%s\n", GREEN, RESET );
-    else
-      printf( "%sJudgment failed%s\n", RED, RESET );
-    ENTER;
-    if ( result ) return true;
-  }
-  return result;
-}
+//   for ( int i = 0; i < player->judgeCards->size; i++ ) {
+//     printUI( player );
+//     printf( "%sJudge barrel%s\n", BLUE, RESET );
+//     result = judgeFunc( player, BARREL );
+//     if ( result )
+//       printf( "%sJudgment successful%s\n", GREEN, RESET );
+//     else
+//       printf( "%sJudgment failed%s\n", RED, RESET );
+//     ENTER;
+//     if ( result ) return true;
+//   }
+//   return result;
+// }
 
 
 bool UnloadBarrel( Player *player ) {

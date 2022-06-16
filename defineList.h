@@ -39,7 +39,7 @@
 #define RED_BACK   "\033[41m"
 #define RESET "\033[0m"
 
-#define ENTER printf("%s%sPress Enter to Continue%s", "\033[100m", GRAY, RESET); while( getchar() != '\n' )
+#define ENTER printf("\n%s%sPress Enter to Continue%s", "\033[100m", GRAY, RESET); while( getchar() != '\n' )
 
 typedef void (*Skill) ( void *this );
 typedef bool (*OrangeCard) ( Player *this );

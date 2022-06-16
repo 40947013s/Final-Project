@@ -31,13 +31,12 @@ Calamity Janet     主動       出牌階段/被攻擊時 // play_card or is_att
     IS_DEAD
 */
 
-Player tmpPlayer;
-
 //    if(被扣一滴血) 抽一張牌
 void fBart_Cassidy( void* this ){
   if ( this == NULL ) return;
   Player* player = (Player*)this;
   if ( player->state == MINUS_HP ) {
+    printf( "Player %s (Bart_Cassidy) can get a card cause of hp-1\n", player->name );
     cardHandler( player, 1 );
   }
 }
@@ -57,10 +56,10 @@ void fBlack_Jack( void* this ) {
             puts("(the second card you draw is heart or diamond)");
             cardHandler( player, 1 );
         }            
-    }        
-    puts( "State change from GET_CARD to PLAY_CARD" );
-    ENTER;
-    player->state = PLAY_CARD;
+        puts( "State change from GET_CARD to PLAY_CARD" );
+        ENTER;
+        player->state = PLAY_CARD;
+    }            
 };
 
 
@@ -69,6 +68,7 @@ void fPaul_Regret( void* this ){
   if ( this == NULL ) return;
   Player* player = (Player*)this;
   if(player->state == SET) {
+    printf( "Everyone's distance to Player %s (Paul_Regret) +1\n", player->name );
     int id = player->id;
       for(int i=0;i<10;i++) {
         if(id!=i) {
@@ -83,11 +83,11 @@ void fPaul_Regret( void* this ){
 void fRose_Doolan( void* this ){
   if ( this == NULL ) return;
   Player* player = (Player*)this;
-
+  
   if(player->state == SET){
+      printf( "Player %s (Rose_Doolan) to everyone's distance -1\n", player->name );
     int id = player->id;
-    for(int j=0;j<10;j++)
-    {
+    for(int j=0;j<10;j++) {
       if(id!=j)
       {
         DISTANCE[id][j]--;
@@ -103,17 +103,15 @@ void fCalamity_Janet( void* this ) {
     if ( this == NULL ) return;
     Player* player = (Player*)this;
     int size = player->handcard->size;
-    if ( player->state == FIGHT || player->state == PLAY_CARD ) {
-        for(int i = 0; i < size; i++) {
-            if( get_element( player->handcard, i ).sticker == MISSED) {
+    if ( player->state == AFTER_GET ) {
+        puts( "Can see MISS as BANG, see BANG as MISS" );
+        ENTER;
+        for(int i = 0; i < size; i++) {             
+            if( get_element( player->handcard, i ).kind == MISSED) {
                 player->handcard->data[i].sticker = BANG;                
             }
-        }
-    }
-    if ( player->state == IS_ATTACKED) {
-        for(int i = 0; i < size; i++) {
-            if(get_element( player->handcard, i ).sticker == BANG) {
-                player->handcard->data[i].sticker = MISSED;
+            if( get_element( player->handcard, i ).kind == BANG) {
+                player->handcard->data[i].sticker = MISSED;                
             }
         }
     }
@@ -121,10 +119,8 @@ void fCalamity_Janet( void* this ) {
 
 //    if(IS_ATTACK) 從傷害玩家抽取傷害數手牌，炸彈不算
 void fEl_Gringo( Player *player, Player *attacker, int n, int kind ) {
-    // if ( this == NULL ) return;
-    // Player* player = (Player*)this;
-    // Kind kind = (Kind) argv;
-    if( player->state == MINUS_HP && kind != DYNAMITE ) {
+    if ( player == NULL || attacker == NULL ) return;
+    if( player->state == MINUS_HP && kind != DYNAMITE && player->role == El_Gringo ) {
         int num = n, card_size = attacker->handcard->size;
         if(num >= card_size) {
             printf("Player %s's sum of card is less than or equal to the number you can draw.\n",attacker->name);
@@ -132,10 +128,6 @@ void fEl_Gringo( Player *player, Player *attacker, int n, int kind ) {
             while(!isEmpty(attacker->handcard)) {
                 takeCard( attacker->handcard, player->handcard, 0 );
             }
-            // 沒手牌 Suzy 抽牌
-            // if( attacker->role == Suzy_Lafayette ) {
-            //     fSuzy_Lafayette( attacker );
-            // }
          } else {
              printf("You can choose %d cards from Player %s\n", num, attacker->name);
              for(int i = 0; i < num; i++) {
@@ -156,7 +148,7 @@ void fJesse_Jones( void* this ){
     char *str = malloc(1000);
     int *store_position = (int *)calloc(PLAYERS_NUM,sizeof(int));
     if( player->state == GET_CARD){ 
-      int choice = scan(0, 1, "Do you want to get the card from other players?  ( 0 : No, 1 : Yes ) :\n");
+      int choice = scan(0, 1, "Do you(Jesse_Jones) want to get the card from other players?  ( 0 : No, 1 : Yes ) :\n");
       if(choice == 0)
       {
         cardHandler( player, 2 );
@@ -208,11 +200,12 @@ void fJesse_Jones( void* this ){
         takeCard( PLAYERS_LIST[array_position].handcard, player->handcard, which_card );
       }
       cardHandler( player, 1 );
-    }
-
-    puts( "State change from GET_CARD to PLAY_CARD" );
+        puts( "State change from GET_CARD to PLAY_CARD" );
     ENTER;
     player->state = PLAY_CARD;
+    }
+
+    
   free(str);
   free(store_position);
 };
@@ -224,6 +217,7 @@ void fJourdonnais( void* this ) {
     Card barrel;
     barrel.suit = -1, barrel.kind = BARREL;
     if( player->state == SET ) {
+        printf( "Player %s (Jourdonnais) has a build-in barrel\n", player->name );
         push_back(player->judgeCards, barrel);
     }    
 }
@@ -232,41 +226,54 @@ void fJourdonnais( void* this ) {
 void fKit_Carlson( void* this ) {
     if ( this == NULL ) return;
     Player* player = (Player*)this;
+    Player *tmpPlayer = malloc( sizeof(Player) * 1 );
+    tmpPlayer->handcard = create_vector( 5 );
     int size = 0;
     if ( !isEmpty(deck) ) size = deck->size;
     if( player->state == GET_CARD) {
-        cardHandler( &tmpPlayer, 3 );
-        printf("Enter your choices to delete :\n");
+        cardHandler( tmpPlayer, 3 );
+        puts( "You (Kit_Carlson) can get 3 of 2 cards from deck" );
+        puts( "Enter your choices to delete :" );
         for(int i = 0; i < 3; i++) {
-            Card card = get_element( tmpPlayer.handcard, i );
-            printf("[%d] %d ", i, card.kind);            
+            Card card = get_element( tmpPlayer->handcard, i );
+            printf("[%d] %s ", i, cardKindName[card.kind]);            
         }
         printf("\n");
-        int choice = scan(0, 2, "Which role card to choose (0 or 1 or 2): ");
-        discardCard( tmpPlayer.handcard, choice );
+        int choice = scan(0, 2, "");
+        discardCard( tmpPlayer->handcard, choice );
         
-        while( !isEmpty( tmpPlayer.handcard) )     
-            takeCard( tmpPlayer.handcard, player->handcard, 0 );         
-    }
-    puts( "State change from GET_CARD to PLAY_CARD" );
-    ENTER;
-    player->state = PLAY_CARD;
+        while( !isEmpty( tmpPlayer->handcard) )     
+            takeCard( tmpPlayer->handcard, player->handcard, 0 );   
+        puts( "State change from GET_CARD to PLAY_CARD" );
+        ENTER;
+        player->state = PLAY_CARD;
+    }   
+
+  
+  delete_vector( tmpPlayer->handcard );
+  free( tmpPlayer );
 }
 
 // if(抽牌判定) 可以抽兩張挑一張
 Card getJudgementCard( Player *player ) {
-  cardHandler( &tmpPlayer, 1 );
-  Card c = get_element( tmpPlayer.handcard, 0 );
-  if ( player == NULL || player->identity != Lucky_Duke  ) return c;
+  Player *tmpPlayer = malloc( sizeof(Player) * 1 );
+  tmpPlayer->handcard = create_vector( 5 );
+  cardHandler( tmpPlayer, 1 );
+  
+  Card c = get_element( tmpPlayer->handcard, 0 );
+  if ( player == NULL || player->identity != Lucky_Duke ) {
+    discardCard( tmpPlayer->handcard, 0 );
+    return c;
+  }
 
   // assert player == Lucky_Duke here
   while ( !isEmpty( player->judgeCards ) ) {
     Card card = pop_back( player->judgeCards );
-    cardHandler( &tmpPlayer, 1 );
-    Card card1 = get_element( tmpPlayer.handcard, 0 );
-    Card card2 = get_element( tmpPlayer.handcard, 1 );
-    discardCard( tmpPlayer.handcard, 0 );
-    discardCard( tmpPlayer.handcard, 1 );
+    cardHandler( tmpPlayer, 1 );
+    Card card1 = get_element( tmpPlayer->handcard, 0 );
+    Card card2 = get_element( tmpPlayer->handcard, 1 );
+    discardCard( tmpPlayer->handcard, 0 );
+    discardCard( tmpPlayer->handcard, 1 );
     
     printf( "card1: " );
     printCard( card1, GREEN );
@@ -279,7 +286,8 @@ Card getJudgementCard( Player *player ) {
     ENTER;
     return ( choice == 1 ) ? card1 : card2;
   } 
-
+  delete_vector( tmpPlayer->handcard );
+  free( tmpPlayer );
   return c;
 }
 
@@ -291,7 +299,9 @@ void fPedro_Ramirez( void* this ) {
     //if ( !isEmpty(deck) ) size = deck->size;
     if( player->state == GET_CARD ) {        
         if( !isEmpty(discardPile) ) {
-            int choice = scan(0, 1, "Enter your where to get card ( 0 : discard, 1 : deck ) :\n");
+            puts( "You (Pedro_Ramirez) can get first from deck or discard pile" );
+            puts( "Enter your where to get card ( 0 : discard, 1 : deck ) :" );
+            int choice = scan(0, 1, "");
             if(choice == 1) cardHandler( player, 1 );
             else {
                 Card card = pop_back(discardPile);
@@ -302,43 +312,46 @@ void fPedro_Ramirez( void* this ) {
             printf("DISCARD_PILE is empty.\n");
             cardHandler( player, 1 );
         }
-      cardHandler( player, 1 );
+        cardHandler( player, 1 );
+        puts( "State change from GET_CARD to PLAY_CARD" );
+        ENTER;
+        player->state = PLAY_CARD;
     }
-    puts( "State change from GET_CARD to PLAY_CARD" );
-    ENTER;
-    player->state = PLAY_CARD;
 }
 
 //    任何時刻丟兩張手牌換一滴血 (觸發條件???)
-void fSid_Ketchum( void* this ){
+void fSid_Ketchum( void* this ) {
     if ( this == NULL ) return;
-    Player* player = (Player*)this;
-    if(GAME_STATE != IN_ROUND) return;
-    puts( "Do want to discard 2 cards to add 1 hp ( 0 : NO, 1 : YES )" );
-    int choice = scan(0, 1, "");
-    if( choice == 0 ) return;
+    Player* player = (Player*)this;    
+    if( GAME_STATE != IN_ROUND || player->state == DISCARD_CARD ) return;
+    if( player->handcard->size < 2 ) return;
     
-    if( player->handcard->size >= 2 ) {
-      for(int i = 0; i < 2; i++) {
-          Card c;
-          c.number = -1;
-          bool warn = false;
-          while ( c.number == -1 ) {
-            if ( warn ) puts( "You have to discard a handcard" );
-            c = chooseCard( player, player->handcard, -1, NULL, false, true );
-            warn = true;
-          }
-      }
-  } 
-  
-}
+    while( player->handcard->size >= 2 ) {
+        puts( "Do you (Sid_Ketchum) want to discard 2 cards to add 1 hp ( 0 : NO, 1 : YES )" );
+        int choice = scan(0, 1, "");
+        if( choice == 0 ) return;        
+        
+        for(int i = 0; i < 2; i++) {
+            Card c;
+            c.number = -1;
+            bool warn = false;
+            while ( c.number == -1 ) {
+                if ( warn ) puts( "You have to discard a handcard" );
+                c = chooseCard( player, player->handcard, -1, NULL, false, true );
+                warn = true;
+            }
+        } 
+        puts( "Suceed." );
+        HPModify( player, player, 1, NONE );
+    }  
 
-//    對方必須以兩張 (閃躲或是酒桶) 躲 bang
+} 
 void fSlab_the_Killer( void* this ){
     if ( this == NULL ) return;
     Player* player = (Player*)this;
     if( player->state == SET ) {
         // call BANG function
+        printf( "Every player need to use two (MISS/BARREL) to avoid Player %s's (Slab_the_Killer) BANG\n", player->name );
         player->attack_power = 2;
     }
 }
@@ -361,6 +374,7 @@ void fWilly_the_Kid( void* this ) {
     if ( this == NULL ) return;
     Player* player = (Player*)this;
     if( player->state == PLAY_CARD ) {
+        puts( "You (Willy_the_Kid) have unlimited times to use BANG" );
         player->numOfBang = -1; //無上限
     } else if( player->state == DISCARD_CARD ) {
         player->numOfBang = 1;

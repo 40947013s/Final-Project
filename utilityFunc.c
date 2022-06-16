@@ -47,21 +47,36 @@ void shuffle() {
         push_back(deck, tmp);
     }
     clear_vector(discardPile);
+    #ifdef DEBUG
+      puts( "shuffle" );
+      ENTER;
+    #endif
 }
 
 int cardHandler( Player * player, int num ) {
-    if ( num > deck->size ) {
-        shuffle();
-    }
+  if ( num >= deck->size ) {
+      shuffle();
+  }    
 
-    for ( int i = 0; i < num; i++ ) {
-        if ( deck->size == 0 ) return i;
-        Card tmp = pop_back(deck);
-        tmp.sticker = tmp.kind;
-        push_back(player->handcard, tmp);
-    }
+  for ( int i = 0; i < num; i++ ) {
+      if ( deck->size == 0 ) return i;
+      Card tmp = pop_back(deck);
+      tmp.sticker = tmp.kind;
+      push_back(player->handcard, tmp);
+  }
 
-    return num;
+  
+  if ( player->state == IS_DEAD ) return true;
+  
+  int tmpstate = player->state;
+  player->state = AFTER_GET;
+  
+  // skills[player->role]( player ); 
+  player->state = tmpstate;
+  
+
+
+  return num;
 }
 
 bool discardCard( Card_vector * cards, int index ) {
@@ -80,7 +95,13 @@ bool discardCard( Card_vector * cards, int index ) {
     if ( cards->id >= 0 && cards->id < PLAYERS_NUM  ) {
       Player *player = &(PLAYERS_LIST[cards->id]);
       if ( player->state == IS_DEAD ) return true;
-      skills[player->role]( player ); 
+      
+      int tmpstate = player->state;
+      player->state = DISCARD_CARD;
+      // printf("%s %s\n", roleName[player->role], player->name);
+      // ENTER;
+      // skills[player->role]( player ); 
+      player->state = tmpstate;
     }
     
     return true;
@@ -130,7 +151,9 @@ void discardAllCard( Player *player ) {
 
   // asssert the player is already dead
   if ( player->state == IS_DEAD ) return;
-  skills[player->role]( player ); 
+    // printf("%s %s\n", roleName[player->role], player->name);
+    //   ENTER;
+  // skills[player->role]( player ); 
 }
 
 void printCard( Card card, char *color ) 
@@ -139,8 +162,8 @@ void printCard( Card card, char *color )
     printf( "%ssuit: %s%s\n", color, suitName[card.suit], RESET );
     printf( "%snumber: %d%s\n", color, card.number, RESET );
     // printf( "attribute: %d\n", card.attribute );
-    printf( "%skind: %s%s\n", color, roleName[card.kind], RESET );
-    printf( "%sSticker: %s%s\n", color, roleName[card.sticker], RESET );
+    printf( "%skind: %s%s\n", color, cardKindName[card.kind], RESET );
+    printf( "%sSticker: %s%s\n", color, cardKindName[card.sticker], RESET );
 }
 
 void clean_buffer(char *arr)
@@ -190,7 +213,9 @@ bool takeCard( Card_vector *p1, Card_vector *p2, int index ) {
   if ( p1->id >= 0 && p1->id < PLAYERS_NUM  ) {
     Player *player = &(PLAYERS_LIST[p1->id]);
     if ( player->state == IS_DEAD ) return true;
-    skills[player->role]( player );  
+      // printf("%s %s\n", roleName[player->role], player->name);
+      // ENTER;
+    // skills[player->role]( player );  
   }
   return true;
 }
@@ -228,14 +253,16 @@ void takeAllCards( Player *p1, Player *p2 ) {
   if ( p1->id >= 0 && p1->id < PLAYERS_NUM  ) {
     Player *player = &(PLAYERS_LIST[p1->id]);
     if ( player->state == IS_DEAD ) return;
-    skills[player->role]( player );  
+      // printf("%s %s\n", roleName[player->role], player->name);
+      // ENTER;
+    // skills[player->role]( player );  
   }
 }
 
 // 回傳此種sticker 種類卡牌位置，沒有則回傳-1
 int find_sticker( Card_vector *card, Kind kind ) {
     for(int i = 0; i < card->size; i++) {
-        if( card->data[i].sticker == kind ) {
+        if( card->data[i].sticker == kind || card->data[i].kind == kind ) {
             if( card->data[i].suit >= 1 && card->data[i].suit <= 13 )
                 return i;
         }

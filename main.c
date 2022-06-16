@@ -2,26 +2,33 @@
 
 #define TESTCASE \
     Card c; \
-    c.kind = CAT; \
-    c.sticker = CAT; \
+    c.kind = DYNAMITE; \
+    c.sticker = DYNAMITE; \
     c.number = 2; \
     c.suit = 2; \
     c.attribute = 1; \
-    push_back( p->judgeCards, c ); \
+    c.is_orange = false; \
+    push_back( p->handcard, c ); \
     
 
 void playerCard( Player *player, int *numOfBang ) {
+    if ( player == NULL || numOfBang == NULL ) return;
+    if ( player->state == IS_DEAD ) return;
+  
     int *color = NULL;
     int num = setColor( &color, -1, -1, 1, player->handcard, 3 );
     if ( *numOfBang == 0 ) {
         setColor( &color, -1, BANG, 0, player->handcard, 0 );
     }
+    if ( player->hp >= player->hp_limit ) {
+      setColor( &color, -1, BEER, 0, player->handcard, 0 );
+    }
     if ( num == 0 ) {
-        puts("No cards available");
-        player->state = DISCARD_CARD;
-        puts( "State: Player Card -> Discard Card" );
-        ENTER;
-        return;
+      puts("No cards available");
+      player->state = DISCARD_CARD;
+      puts( "State: Player Card -> Discard Card" );
+      ENTER;
+      return;
     }
 
     int choice, size = player->handcard->size;
@@ -47,20 +54,24 @@ void playerCard( Player *player, int *numOfBang ) {
             printUI( player );
             printHandCard( player->handcard, color, true);
             Card tmp = get_element( player->handcard, choice-1 );
-            printf( "Are you sure you want to use the [%s] card? (Y/n) ", cardKindName[tmp.sticker] );
+            printf( "Are you sure you want to use the card? (Y/n) " );
             fgets(input, 100, stdin);
-            if (( input[0] == 'Y' || input[0] == 'y' ) && tmp.sticker != NONE ) {
+            if (( input[0] == 'Y' || input[0] == 'y' || input[0] == '\n' ) && tmp.sticker != NONE ) {
                 warn = false;
                 if ( tmp.is_orange ) {
                     if ( tmp.sticker == BEER && Beer( player, NULL ) ) {
-                        discardCard( player->handcard, choice-1 );
+                      Card c = get_element( player->handcard, choice-1 );
+                      discardCard( player->handcard, choice-1 );
                     }
                     else if ( orangeCards[tmp.sticker]( player ) ) {
-                        discardCard( player->handcard, choice-1 );
+                      if ( tmp.kind == BANG || tmp.sticker == BANG ) {
+                        if ( *numOfBang != -1 ) (*numOfBang)--;
+                      }
+                      discardCard( player->handcard, choice-1 );
                     }
                 }
                 else {
-                    blueCards[tmp.sticker]( player, choice-1 );
+                    blueCards[tmp.kind]( player, choice-1 );
                 }
                 break;
             }
@@ -108,7 +119,7 @@ void judgeTurn( Player *player, Player *nextPlayer ) {
     Card card = get_element( player->judgeCards, i );
     if ( card.kind == JAIL ) {
       printUI( player );
-      printf( "%sJudge jail%s\n", BLUE, RESET );
+      printf( "%sJudge jail%s\n\n", BLUE, RESET );
       judge = judgeFunc( player, JAIL );
       discardCard( player->judgeCards, i );
   
@@ -134,22 +145,29 @@ void judgeTurn( Player *player, Player *nextPlayer ) {
 
 
 void discardTurn( Player *player ) {
-    if( player->handcard->size <= player->hp ) {
-        return; // 少於hp不用丟
-    }
-    
+  
     if( player->state == IS_DEAD ) {
         return; // 死了
     }
     
     int num = player->handcard->size - player->hp;
+    
     bool is_discard = false;
-    while ( num ) {
+    int choice = 1;
+    while ( true ) {
       printUI( player );
-      printf("You have to discard %d handcard(s)\n", num );
-      ENTER;
+      if ( num > 0 ) {
+        printf("You have to discard %d handcard(s)\n", num );
+        ENTER;
+      }
+      else if ( player->handcard->size > 1 ) {
+        choice = scan( 0, 1, "Do you want to discard cards? (1: yes, 0: no) " );
+        if ( choice == 0 ) return;
+      }
+      else return;
+        
       is_discard = chooseCard( player, player->handcard, -1, NULL, false, true ).number > 0 ? true : false;
-      if ( is_discard ) num--;
+      if ( is_discard && num ) num--;
     }
 }
 
@@ -166,7 +184,7 @@ int main()
     if ( GAME_STATE == NOT_YET_START ) {
         for ( int i = 0; i <= PLAYERS_NUM; i++ ) {
           cardHandler( PLAYERS_LIST + i, PLAYERS_LIST[i].hp );
-          // skills[(PLAYERS_LIST + j))->role]( &p );
+           //skills[(PLAYERS_LIST + i)->role]( &p );
           PLAYERS_LIST[i].state = FINISH_TIHS_TURN;
           
         }

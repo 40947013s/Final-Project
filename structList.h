@@ -11,6 +11,7 @@ typedef enum _role_mode
     SET,
     JUDGE,
     GET_CARD,
+    AFTER_GET,
     PLAY_CARD,
     DISCARD_CARD,
     MINUS_HP,

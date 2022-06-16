@@ -17,44 +17,44 @@ Player *choosePlayer( Player *attacker, int limitDistance );
 Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_card, bool except, bool visible );
 
 // orange card
-bool Bang( Player *attacker );
+bool Bang( Player *attacker ); // yes
 bool Miss( Player *defender, int n );
-bool Indians( Player *attacker );
-bool Stagecoach( Player *player );
-bool Wells( Player *player );
-bool Store( Player *player );
-bool Beer( Player *player, Player *attacker );
-bool Saloow( Player *player );
-bool Duel( Player *attacker );
-bool panic( Player *attacker );
-bool cat( Player *attacker ); // new
-bool Gatling( Player *attacker ) ; // new, still have to test
+bool Indians( Player *attacker ); // yes
+bool Stagecoach( Player *player ); // yes
+bool Wells( Player *player ); // yes
+bool Store( Player *player ); // yes
+bool Beer( Player *player, Player *attacker ); 
+bool Saloow( Player *player ); // yes
+bool Duel( Player *attacker ); // yes
+bool panic( Player *attacker ); // yes
+bool cat( Player *attacker ); // yes
+bool Gatling( Player *attacker ) ; // yes
 
 // blue card
-bool EquipScope( Player *player, int card_position );
-bool UnloadScope( Player *player, Card_vector *cards );
-bool EquipMustang( Player *player, int card_position );
-bool UnloadMustang( Player *player, Card_vector *cards );
+bool EquipScope( Player *player, int card_position ); // yes
+bool UnloadScope( Player *player, Card_vector *cards ); // yes
+bool EquipMustang( Player *player, int card_position ); // yes
+bool UnloadMustang( Player *player, Card_vector *cards ); //yes
 
-bool UnloadWeapon( Player* player, Card_vector *cards );
-bool UnloadEquip( Player* player, int kind ); // new
+bool UnloadWeapon( Player* player, Card_vector *cards ); 
+bool UnloadEquip( Player* player, int kind ); 
 
-bool EquipVolcanic( Player *player, int card_position );
-bool UnloadVolcanic( Player *player, Card_vector *cards );
+bool EquipVolcanic( Player *player, int card_position ); // yes
+bool UnloadVolcanic( Player *player, Card_vector *cards ); // yes
 
-bool EquipSchofield( Player *player, int card_position );
-bool UnloadSchofield( Player *player, Card_vector *cards );
+bool EquipSchofield( Player *player, int card_position ); // yes
+bool UnloadSchofield( Player *player, Card_vector *cards ); // yes
 bool EquipRemington( Player *player, int card_position );
 bool UnloadRemington( Player *player, Card_vector *cards );
-bool EquipRev( Player *player, int card_position );
-bool UnloadRev( Player *player, Card_vector *cards );
-bool EquipWinchester( Player *player, int card_position );
-bool UnloadWinchester( Player *player, Card_vector *cards );
+bool EquipRev( Player *player, int card_position ); // yes
+bool UnloadRev( Player *player, Card_vector *cards ); // yes
+bool EquipWinchester( Player *player, int card_position ); // yes
+bool UnloadWinchester( Player *player, Card_vector *cards ); // yes
 bool EquipDynamite( Player *player, int index );
-bool EquipJail( Player *player , int index ); // new
-bool EquipBarrel( Player *player , int index ); // new
-bool JudgeBarrel( Player *player ); // new
-bool UnloadBarrel( Player *player ); // new
+bool EquipJail( Player *player , int index ); // yes
+bool EquipBarrel( Player *player , int index ); // yes
+// bool JudgeBarrel( Player *player ); // error
+bool UnloadBarrel( Player *player );
 
 bool nullFunc2( Player *player );
 bool nullFunc3( Player *player, int pos );
