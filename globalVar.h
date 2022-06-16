@@ -1,6 +1,8 @@
 #pragma once
 
 #include "structList.h"
+#include "defineList.h"
+
 extern int PLAYERS_NUM; //遊戲人數
 extern int ALIVE_NUM; //存活遊戲人數
 extern int SHERIFF_NUM, DEPUTIES_NUM, OUTLAWS_NUM, RENEGADE_NUM; //身分人數
@@ -16,6 +18,8 @@ extern Card_vector* deck;
 extern Card_vector* discardPile;
 
 extern Skill skills[16];
+extern OrangeCard orangeCards[12];
+extern BlueCard blueCards[23];
 
 /* 身分 
 * -警長, -副警長, -歹徒, -叛徒*/
@@ -35,3 +39,4 @@ extern char *Color[];
 
 // state
 extern char *stateName[];
+

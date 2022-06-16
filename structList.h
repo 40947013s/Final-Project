@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-typedef void (*Skill) ( void *this, void* argv );
+
 
 /* 角色狀態
 * -設定, -自身回合, -他人回合, -死亡*/
@@ -48,8 +48,9 @@ typedef enum _role_kind
     Slab_the_Killer, Suzy_Lafayette, Vulture_Sam, Willy_the_Kid
 } Role;
 
+
 /* 消耗牌+裝備牌*/
-typedef enum _card_kind
+typedef enum _card_kind        
 {
     BANG, MISSED, GATLING, INDIANS, PANIC, 
     CAT, STAGECOACH, WELLS, STORE, BEER, 
@@ -75,6 +76,7 @@ typedef struct {
     int size;
     int allocate_size;
     Card *data;
+    int id;
 } Card_vector;
 
 typedef struct _player_list

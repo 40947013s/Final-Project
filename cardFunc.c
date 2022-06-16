@@ -1,4 +1,4 @@
- #include "cardFunc.h"
+#include "cardFunc.h"
 
 void HPModify( Player* attacker, Player *defender, int n, Kind reason ){
   if ( n < 0 ) {
@@ -229,20 +229,26 @@ bool Bang( Player *attacker ){
 }
 
 bool Gatling( Player *attacker ) {
-    if ( attacker == NULL ) return false;
-    Player *p;     
-    printf("You can attack all the others in the game.\n");
+  if ( attacker == NULL ) return false;
+    Player *defender;     
+    printf("Attack all players\n");
+    ENTER;
     for(int i = 0; i < PLAYERS_NUM; i++) {
-        p = PLAYERS_LIST + i;  
+        defender = PLAYERS_LIST + i;   
         // 如果不是自己        
-        if( p->id != attacker->id ) {
-            // 啤酒桶包在 MISS 內
-            if( Miss(p, 1) ) {                
-                printf("%10s %7d avoid attack.\n", p->name, p->id);
-            }else {
-                HPModify( attacker, p, -1, GATLING ); // 扣一滴血
-                printf("%10s %7d had been attacked.\n", p->name, p->id);
-            }
+        if( defender->id != attacker->id && defender->state != IS_DEAD ) {
+          bool miss = Miss( defender, 1 );  
+          printUI( attacker );
+          if ( miss ) {
+              printf( "Player %s avoid attack.\n", defender->name );
+              printf( "Missed attacked!\n" );
+              ENTER;
+          }
+          else {
+              printf( "successful attack!\n" );
+              ENTER;
+              HPModify( attacker, defender, -1, INDIANS );
+          }
         }            
     }
     return true;
@@ -275,27 +281,7 @@ bool Miss( Player *defender, int n ) {
 
 // Indians 被攻擊者回應
 void Indians_respond( Player *attacker, Player *defender ) {
-    printf("Give BANG?\n");
-    int choice = scan(0, 1, "--> "), index = -1;  
-    // 選擇棄BANG            
-    if(choice) {
-        for(int j = 0; j < defender->handcard->size; i++) {
-            if( defender->handcard->data[j].sticker == BANG ) {
-                index = j; break;
-            }
-        }
-        // 沒有BANG                
-        if(index == -1 ) {
-            printf("Sorry, you don't have BANG to avoid this attack\n");                    
-            HPModify( attacker, defender, -1, GATLING );
-            printf("%10s %7d hp minus 1.\n", defender->name, defender->id);
-        } else {
-            discardCard( defender.hancard, index );
-        }
-    } else {
-        HPModify( attacker, defender, -1, GATLING );
-        printf("%10s %7d hp minus 1.\n", defender->name, defender->id);
-    }
+    
 
 }
 
@@ -310,7 +296,27 @@ bool Indians( Player *attacker ) {
         // 如果不是自己        
         if( p->id != attacker->id ) {
             // 其他人的對應            
-            Indians_respond( attacker, p );
+            printf("Give BANG?\n");
+            int choice = scan(0, 1, "--> "), index = -1;  
+            // 選擇棄BANG            
+            if(choice) {
+                for(int j = 0; j < defender->handcard->size; i++) {
+                    if( defender->handcard->data[j].sticker == BANG ) {
+                        index = j; break;
+                    }
+                }
+                // 沒有BANG                
+                if(index == -1 ) {
+                    printf("Sorry, you don't have BANG to avoid this attack\n");                    
+                    HPModify( attacker, defender, -1, GATLING );
+                    printf("%10s %7d hp minus 1.\n", defender->name, defender->id);
+                } else {
+                    discardCard( defender.hancard, index );
+                }
+            } else {
+                HPModify( attacker, defender, -1, GATLING );
+                printf("%10s %7d hp minus 1.\n", defender->name, defender->id);
+            }
         }            
     }
   return true;
@@ -409,7 +415,7 @@ bool panic( Player *attacker ){
   }
   int max = PLAYERS_LIST[array_position].handcard->size;
   printf("Player %s has %d card(s) (choose from 0 to %d)\n",PLAYERS_LIST[array_position].name,max,max-1);
-  int which_card = scan(0,max-1,"Choose the card you want: \n");
+  int which_card = scan(0,max-1,"Choose the card you want: ");
   takeCard( PLAYERS_LIST[array_position].handcard, attacker->handcard, which_card );
   // if() 
   free(str);
@@ -417,109 +423,54 @@ bool panic( Player *attacker ){
   return true;
 }
 
-// 類似 panic
-void cat_respond( Player *defender ) {
-    printf("You need to discard a card (0 : handcard, 1 : equipment): \n");
-    int choice = scan(0, 1, "--> ");
-    Card_vector *card = creat_vector(15);
-    
-    printf("Which card to discard: \n");
-    printf("Choice   kind\n");
-    // 選擇手牌
-    if( choice == 0 ) {
-        int h_size = defender->handcard->size, counter = 0;
-        for(int i = 0; i < h_size; i++, counter++) {
-            printf("[%d] %d\n", counter, defender->handcard->data[i].kind);
-        } 
-        choice = scan(0, counter-1, "--> ");
-        return;
-    }
-    // 選擇裝備
-    // int counter = 0. index = -1;
-    // int w_size = defender->weapon->size, j_size = defender->judgeCards->size;
-    // int s_size = defender->shield->size, d_size = defender->distance_item->size;
-    
-    // for(int i = 0; i < w_size; i++, counter++) {        
-    //     // 非自備牌
-    //     if(defender->weapon->data[i].suit >= 1 && defender->weapon->data[i].suit <= 13) {
-    //         push_back(card, defender->weapon);
-    //         printf("[%d] %d\n", counter, defender->weapon->data[i].kind);
-    //         cunter++;
-    //     }        
-    // } d_size = counter;
-    // for(int i = 0; i < d_size; i++, counter++) {
-    //     // 非自備牌
-    //     if(defender->distance_item->data[i].suit >= 1 && defender->distance_item->data[i].suit <= 13) {
-    //         push_back(card, defender->distance_item);
-    //         printf("[%d] %d\n", counter, defender->distance_item->data[i].kind);
-    //         cunter++;
-    //     }   
-    // } s_size = counter;
-    // for(int i = 0; i < s_size; i++, counter++) {
-    //     // 非自備牌
-    //     if(defender->shield->data[i].suit >= 1 && defender->shield->data[i].suit <= 13) {
-    //         push_back(card, defender->shield);
-    //         printf("[%d] %d\n", counter, defender->shield->data[i].kind);
-    //         cunter++;
-    //     }
-    // } j_size = counter;
-    // for(int i = 0; i < j_size; i++) {
-    //     push_back(card, defender->judgeCards);
-    //     printf("[%d] %d\n", counter, defender->judgeCards->data[i].kind);
-    //     cunter++;
-    // }
-    // int choice = scan(0, counter-1, "--> ");
-    
-    // if( choice >= j_size ) {
-    //     choice -= j_size;
-    //     for(index = 0; ; index++) {
-    //         if(defender->judgeCards->data[index].kind == card->data[choice].kind) {
-    //             break;
-    //         }
-    //     }
-    //     // 卸載 judgeCards[index]
-    // } else if( choice >= s_size ) {
-    //     choice -= s_size;
-    //     for(index = 0; ; index++) {
-    //         if(defender->shield->data[index].kind == card->data[choice].kind) {
-    //             break;
-    //         }
-    //     }
-    //     // 卸載 shield[index]
-    // } else if( choice >= d_size ) {
-    //     choice -= d_size;
-    //     for(index = 0; ; index++) {
-    //         if(defender->distance_item->data[index].kind == card->data[choice].kind) {
-    //             break;
-    //         }
-    //     }
-    //     // 卸載 distance_item[index]
-    // } else {
-    // for(index = 0; ; index++) {
-    //         if(defender->weapon->data[index].kind == card->data[choice].kind) {
-    //             break;
-    //         }
-    //     }
-    //     // 卸載 weapon[index]
-    // }
-
-}
 
 // 要求某玩家棄置手牌或裝備牌
 bool cat( Player *attacker ) {
-    Player *p;  
-    int *INDEX = malloc(PLAYERS_NUM), id_count = 0; 
-    printf("Which player to discard a card: \n");
-    Player *choose_player = choosePlayer( attacker, -1 );
     
-    // if ( id_count <= 0 ) {
-    //     printf("No one have any card to discard.\n");
-    //     return;
-    // }
-    int choice = scan(0, id_count-1, "--> ");
-    // call PLAYERS_LIST[choice] to discard a card.
-    cat_respond( PLAYERS_LIST[INDEX[choice]] );
-    return true;
+    if(attacker == NULL) return false;
+  Player *choose_player = choosePlayer( attacker, -1 );
+  bool is_choose = false;
+
+  int all_size =  choose_player->handcard->size + choose_player->weapon->size;
+  all_size += choose_player->shield->size + choose_player->distance_item->size;
+  if( all_size == 0 ) {
+      printf( "Player %s didn't have card to discard.\n", choose_player->name );
+      ENTER;
+      return false;
+  }
+
+  while ( !is_choose ) {
+    printUI( choose_player );
+    puts( "Choose the kind of item you want to discard" );
+    puts( "[1] handcard [2] weapon [3] shield [4] distance item [5] judgement card" );
+    int choice = scan( 0, 5, "" );
+    switch ( choice ) {
+      case 0:
+        puts( "Choose again" );
+        ENTER;
+        return false;
+      case 1:
+        is_choose = chooseCard( choose_player, choose_player->handcard, -1, NULL, false, true );
+        break;
+      case 2:
+        is_choose = chooseCard( choose_player, choose_player->weapon, -1, NULL, false, true );
+        break;
+      case 3:
+        is_choose = chooseCard( choose_player, choose_player->shield, -1, NULL, false, true );
+        break;
+      case 4:
+        is_choose = chooseCard( choose_player, choose_player->distance_item, -1, NULL, false, true );
+        break;
+      case 5:
+        is_choose = chooseCard( choose_player, choose_player->judgeCards, JAIL, NULL, true, true );
+        break;
+    }
+    
+  }
+
+  printUI( choose_player );
+  ENTER;
+  return true;
 }
 
 //玩家從牌庫頂抽兩張牌
@@ -565,7 +516,7 @@ bool Store( Player *player ) {
         } // 選卡
         if(start) {
             Store_choose( &p, tmpPlayer->handcard );
-        }
+        }  
     }
     return true;
 }
@@ -797,6 +748,7 @@ bool EquipVolcanic( Player *player ) {
   numOfBang = -1;
   return true;
 }
+
 bool UnloadVolcanic( Player *player ) {
     // Willy the Kid 的回合可以用任意張 BANG
     numOfBang = (player.role != Willy_the_Kid) ? 1 : -1;  
@@ -843,6 +795,7 @@ bool EquipBarrel( Player *player ) {
   else
   {
     printf("The suit is not heart, Judgment failed\n");
+    push_back(discardPile);
     return false;
   }
   return true;
@@ -856,26 +809,11 @@ bool UnloadBarrel( Player *player ){
   return true;
 }
 
-bool EquipJail( Player *player ) {
-    if ( player == NULL ) return false;
-    int index = find_sticker(player->handcard, JAIL);
-    if( index == -1 ) {
-        puts( "You didn't have card JAIL.");
-        return false;
-    }
-
-    int counter = 0, *id = malloc(PLAYERS_NUM);
-    puts( "Send one player except Sheriff to JAIL: ");
-    for(int i = 0; i < PLAYERS_NUM; i++) {
-        if(PLAYERS_LIST[choice]->identity != Sheriff) {
-            printf("[%d] : Player %s\n", counter, PLAYERS_NUM-1);
-            id[counter++] = i;
-        }
-    }
-    int choice = scan(0, counter-1, "--> ");
-
-    printf( "Player %s is in JAIL.\n", PLAYERS_LIST[id[choice]].name );
-    takeCard( player->handcard, PLAYERS_LIST[id[choice]]->judgeCards, index ); 
+bool EquipJail( Player *player , int index ) {
+    takeCard( player->handcard, player->judgeCards, index );   
+    printUI( player );
+    puts( "Equip jail" );
+    ENTER;
     return true;
 }
 
@@ -892,7 +830,7 @@ bool UnloadJail( Player *player, Card *card ) {
     int index = find_sticker( player->judgeCards, JAIL);
     discardCard( player->judgeCards, index );
     if( is_heart ) { 
-        puts( "想太美." ); // You can avoid to go to jail
+        puts( "你有夠賽運." ); // You can avoid to go to jail
         return true;
     } else {
         puts( "艘旅呦, 請給我下去😍." ); // Sorry, you can't have any actions in this turn

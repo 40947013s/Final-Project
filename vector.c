@@ -6,6 +6,7 @@ Card_vector *create_vector(size_t n) {
         p->data = (Card*)malloc(n * sizeof(Card));
         p->size = 0;
         p->allocate_size = n;
+        p->id = -1;
     }
     return p;
 }
@@ -48,6 +49,7 @@ Card get_element(Card_vector *v, size_t n) {
     }
 
     Card c;
+    c.number = -1;
     return c;
 }
 

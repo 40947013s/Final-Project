@@ -1,6 +1,7 @@
 #pragma once
 #include "structList.h"
 #include "globalVar.h"
+#include "skillFunc.h"
 #include "vector.h"
 #include <stdbool.h>
 #include <string.h>
@@ -10,7 +11,7 @@
 void print_player(int th);
 int cardHandler( Player * player, int num );
 bool discardCard( Card_vector * cards, int index );
-void printCard( Card card );
+void printCard( Card card, char *color );
 void clean_buffer(char *arr);
 int scan(int min, int max, char *str);
 void shuffle();
@@ -22,3 +23,4 @@ void setPlayer( Player *p1, Player *p2 );
 int find_position( int id );
 int min(int a, int b);
 void calcDistance() ;
+bool judgeFunc( Player *player, int kind );

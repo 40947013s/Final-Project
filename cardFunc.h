@@ -7,7 +7,7 @@
 #include "vector.h"
 
 // void HPModify( Player* attacker, Player *defender, int n, int reason );
-void IsGameOver( Player *killer, Player *player ); // set winner part 還沒加
+// void IsGameOver( Player *killer, Player *player ); // set winner part 還沒加
 
 // 選擇攻擊對象
 // if limitDistance == -1 then 沒有距離限制
@@ -18,7 +18,7 @@ void IsGameOver( Player *killer, Player *player ); // set winner part 還沒加
 // orange card
 
 // bool Bang( Player *attacker );
-void Gatling( Player *attacker );
+// void Gatling( Player *attacker );
 
 // 需要n張Miss來抵銷Bang的攻擊
 // bool Miss( Player *defender, int n );
@@ -26,10 +26,9 @@ void Gatling( Player *attacker );
 // void Indians( Player *attacker ); 
 // void Indians_respond( Player *defender );
 
-void panic( Player *attacker );
+// void panic( Player *attacker );
 
-void cat( Player *attacker );
-void cat_respond( Player *defender );
+// void cat( Player *attacker );
 
 // void Stagecoach( Player *player );
 // void Wells( Player *player );
@@ -62,11 +61,12 @@ unload weapon 卸下武器
 // bool EquipVolcanic( Player *player );
 // bool UnloadVolcanic( Player *player );
 
-bool EquipBarrel( Player *player );
-bool UnloadBarrel( Player *player );
+// bool EquipBarrel( Player *player, int index );
+// bool UnloadBarrel( Player *player );
 
-bool EquipJail( Player *player );
-bool UnloadJail( Player *player, Card *card );
+// bool EquipJail( Player *player, int index );
+// bool UnloadJail( Player *player, Card *card ); -> unuse
+
 /*
   卸下Jail時要進行判定
   card為指定判定的牌，若card == NULL，則在function中抽一張

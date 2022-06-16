@@ -7,6 +7,6 @@
 #include "globalVar.h"
 #include "defineList.h"
 
-void printHandCard( Card_vector *cards, int color[] );
+void printHandCard( Card_vector *cards, int color[], bool visible );
 int setColor( int **c, int index, int kind, int attribute, Card_vector* handcard, int color ) ;
 void printUI( Player *nowPlayer );

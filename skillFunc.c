@@ -60,7 +60,7 @@ void fBlack_Jack( void* this ) {
     }        
     puts( "State change from GET_CARD to PLAY_CARD" );
     ENTER;
-    player->state == PLAY_CARD;
+    player->state = PLAY_CARD;
 };
 
 
@@ -117,8 +117,7 @@ void fCalamity_Janet( void* this ) {
             }
         }
     }
-        
-};
+}
 
 //    if(IS_ATTACK) 從傷害玩家抽取傷害數手牌，炸彈不算
 void fEl_Gringo( Player *player, Player *attacker, int n, int kind ) {
@@ -213,7 +212,7 @@ void fJesse_Jones( void* this ){
 
     puts( "State change from GET_CARD to PLAY_CARD" );
     ENTER;
-    player->state == PLAY_CARD;
+    player->state = PLAY_CARD;
   free(str);
   free(store_position);
 };
@@ -251,7 +250,7 @@ void fKit_Carlson( void* this ) {
     }
     puts( "State change from GET_CARD to PLAY_CARD" );
     ENTER;
-    player->state == PLAY_CARD;
+    player->state = PLAY_CARD;
 }
 
 // if(抽牌判定) 可以抽兩張挑一張
@@ -270,9 +269,9 @@ Card getJudgementCard( Player *player ) {
     discardCard( tmpPlayer.handcard, 1 );
     
     printf( "card1: " );
-    printCard( card1 );
+    printCard( card1, GREEN );
     printf( "card2: " );
-    printCard( card2 );
+    printCard( card2, GREEN );
   
     char *str = "Choose the card you want to use as a decision card( 1 or 2): ";
     int choice = scan(1, 2, str);
@@ -281,6 +280,7 @@ Card getJudgementCard( Player *player ) {
     return ( choice == 1 ) ? card1 : card2;
   } 
 
+  return c;
 }
 
 //    如果是抽牌階段 -> 選第一抽(牌庫or棄牌)
@@ -306,26 +306,31 @@ void fPedro_Ramirez( void* this ) {
     }
     puts( "State change from GET_CARD to PLAY_CARD" );
     ENTER;
-    player->state == PLAY_CARD;
+    player->state = PLAY_CARD;
 }
 
-//    任何時刻丟兩張守牌換一滴血 (觸發條件???)
+//    任何時刻丟兩張手牌換一滴血 (觸發條件???)
 void fSid_Ketchum( void* this ){
     if ( this == NULL ) return;
     Player* player = (Player*)this;
-    if(player->handcard->size >= 2) {
-        for(int i = 0; i < 2; i++) {
-            printf("%d -> ", i);
-            for(int j = 0; j < player->handcard->size; j++) {
-                printf("[%d] %d ", j, get_element( player->handcard, j).kind );
-            } 
-          
-            printf("\n");
-            int size = player->handcard->size;            
-            int choice = scan(0, size-1, "Choose which card to delete (exchange hp) :");
-            discardCard( player->handcard, choice);
-        }
-    }    
+    if(GAME_STATE != IN_ROUND) return;
+    puts( "Do want to discard 2 cards to add 1 hp ( 0 : NO, 1 : YES )" );
+    int choice = scan(0, 1, "");
+    if( choice == 0 ) return;
+    
+    if( player->handcard->size >= 2 ) {
+      for(int i = 0; i < 2; i++) {
+          Card c;
+          c.number = -1;
+          bool warn = false;
+          while ( c.number == -1 ) {
+            if ( warn ) puts( "You have to discard a handcard" );
+            c = chooseCard( player, player->handcard, -1, NULL, false, true );
+            warn = true;
+          }
+      }
+  } 
+  
 }
 
 //    對方必須以兩張 (閃躲或是酒桶) 躲 bang
@@ -341,11 +346,15 @@ void fSlab_the_Killer( void* this ){
 //    if(沒手牌) 抽牌
 void fSuzy_Lafayette( void* this ) {
     if ( this == NULL ) return;
+    if ( GAME_STATE != IN_ROUND ) return;
     Player* player = (Player*)this;
-    if ( player->handcard->size <= 0 && player->state!= FIGHT /*&& player->state != PLAY_CARD*/ ) {
+    if ( player->handcard->size <= 0 ) {
+      printf( "Player %s (Suzy Lafayette) didn't have hand card.\n", player->name );
+      puts( "Get 1 hand card" );
       cardHandler( player, 1 );
+      ENTER;        
     }  
-};
+}
 
 //    在自身回合 bang無上限 (PLAY_CARD 和 DISCARD_CARD 狀態前要進入)
 void fWilly_the_Kid( void* this ) {
@@ -357,3 +366,6 @@ void fWilly_the_Kid( void* this ) {
         player->numOfBang = 1;
     }
 }
+
+void nullFunc( void *this){}
+void fLucky_Duke( void *this ){}

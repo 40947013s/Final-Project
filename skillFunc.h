@@ -1,4 +1,7 @@
 #pragma once
+#include "defineList.h"
+#include "test.h"
+#include "structList.h"
 
 void fBart_Cassidy( void* this );
 void fBlack_Jack( void* this );
@@ -7,7 +10,7 @@ void fEl_Gringo( Player *player, Player *attacker, int n, int kind );
 void fJesse_Jones( void* this );
 void fJourdonnais( void* this );
 void fKit_Carlson( void* this );
-void fLucky_Duke( void *this ){};
+void fLucky_Duke( void *this );
 void fPaul_Regret( void* this );
 void fPedro_Ramirez( void* this );
 void fRose_Doolan( void* this );

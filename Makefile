@@ -1,7 +1,7 @@
 CC := gcc
 LDFLAGS := -lm
 TARGETS := main
-main_OBJ := skillFunc.o utilityFunc.o vector.o test.o UI.o
+main_OBJ := skillFunc.o utilityFunc.o vector.o test.o UI.o init.o
 
 .PHONY:all
 all:$(TARGETS)

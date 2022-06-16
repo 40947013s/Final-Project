@@ -65,66 +65,82 @@ int cardHandler( Player * player, int num ) {
 }
 
 bool discardCard( Card_vector * cards, int index ) {
-    if ( cards->size <= index ) return false;
+    if ( cards == NULL ) return false;
+    if ( isEmpty( cards ) ) return false;
     Card tmp = get_element( cards, index);
     remove_element((cards), index);
     // 如果是內建則直接丟棄
-    // if( tmp.suit == -1 ) {
-    //     return false;
-    // }
+    if( tmp.suit == -1 ) {
+        return true;
+    }
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
-    return false;
+
+    // assert cards->id == -1 or cards->id == some players.id
+    if ( cards->id >= 0 && cards->id < PLAYERS_NUM  ) {
+      Player *player = &(PLAYERS_LIST[cards->id]);
+      if ( player->state == IS_DEAD ) return true;
+      skills[player->role]( player ); 
+    }
+    
+    return true;
 }
 
 // 棄掉所有的牌，包含手牌、装備
 void discardAllCard( Player *player ) {
-    if ( player == NULL ) return;
-    while ( !isEmpty( player->handcard ) ) {
-        Card tmp = pop_back(player->handcard);
-        tmp.sticker = tmp.kind;
-        push_back(discardPile, tmp);
-    }
-    while ( !isEmpty( player->weapon ) ) {
-        Card tmp = pop_back(player->weapon);
-        tmp.sticker = tmp.kind;
-        push_back(discardPile, tmp);
-    }
-    player->equipWeapon = NONE;
-    while ( !isEmpty(player->shield) ) {
-        Card tmp = pop_back(player->shield);
-        // 如果是內建則直接丟棄
-        // if( tmp.suit == -1 ) {
-        //     return false;
-        // }
-        tmp.sticker = tmp.kind;
-        push_back(discardPile, tmp);
-    }
-    player->equipShield = NONE;
-    while ( !isEmpty( player->distance_item ) ) {
-        Card tmp = pop_back(player->distance_item);
-        tmp.sticker = tmp.kind;
-        push_back(discardPile, tmp);
-    }
-    player->equipScope = NONE;
-    player->equipMustang = NONE;
+  if ( player == NULL ) return;
+  while ( !isEmpty( player->handcard ) ) {
+    Card tmp = pop_back(player->handcard);
+    if ( tmp.suit == -1 ) continue;
+    tmp.sticker = tmp.kind;
+    push_back(discardPile, tmp);
+  }
 
-    while ( !isEmpty( player->judgeCards ) ) {
-        Card tmp = pop_back(player->judgeCards);
-        tmp.sticker = tmp.kind;
-        push_back(discardPile, tmp);
-    }
-    
+  // bool UnloadWeapon( Player* player, Card_vector *cards );
+  while ( !isEmpty( player->weapon ) ) {
+    Card tmp = pop_back(player->weapon);
+    if ( tmp.suit == -1 ) continue;
+    tmp.sticker = tmp.kind;
+    push_back(discardPile, tmp);
+  }
+
+  player->equipWeapon = NONE;
+  while ( !isEmpty(player->shield) ) {
+    Card tmp = pop_back(player->shield);
+    if ( tmp.suit == -1 ) continue;
+    tmp.sticker = tmp.kind;
+    push_back(discardPile, tmp);
+  }
+  player->equipShield = NONE;
+  while ( !isEmpty( player->distance_item ) ) {
+    Card tmp = pop_back(player->distance_item);
+    if ( tmp.suit == -1 ) continue;
+    tmp.sticker = tmp.kind;
+    push_back(discardPile, tmp);
+  }
+  player->equipScope = NONE;
+  player->equipMustang = NONE;
+
+  while ( !isEmpty( player->judgeCards ) ) {
+    Card tmp = pop_back(player->judgeCards);
+    if ( tmp.suit == -1 ) continue;
+    tmp.sticker = tmp.kind;
+    push_back(discardPile, tmp);
+  }
+
+  // asssert the player is already dead
+  if ( player->state == IS_DEAD ) return;
+  skills[player->role]( player ); 
 }
 
-void printCard( Card card ) 
+void printCard( Card card, char *color ) 
 {
     // printf( "is_orange: %d\n", card.is_orange );
-    printf( "suit: %s\n", suitName[card.suit] );
-    printf( "number: %d\n", card.number );
+    printf( "%ssuit: %s%s\n", color, suitName[card.suit], RESET );
+    printf( "%snumber: %d%s\n", color, card.number, RESET );
     // printf( "attribute: %d\n", card.attribute );
-    printf( "kind: %s\n", roleName[card.kind] );
-    printf( "Sticker: %s\n", roleName[card.sticker] );
+    printf( "%skind: %s%s\n", color, roleName[card.kind], RESET );
+    printf( "%sSticker: %s%s\n", color, roleName[card.sticker], RESET );
 }
 
 void clean_buffer(char *arr)
@@ -162,41 +178,58 @@ int scan(int min, int max, char *str)
 // 把牌從 player1第[index]張牌給player2, index = 0, 1, 2....
 bool takeCard( Card_vector *p1, Card_vector *p2, int index ) {
   if ( p1 == NULL || p2 == NULL ) return false;
-  if ( p1->size <= index ) {
-    return false;
-  }
+  if ( isEmpty( p1 ) ) return false;
 
   Card card = get_element( p1, index );
+  if ( card.suit == -1 ) false;
   remove_element( p1, index );
   card.sticker = card.kind;
   push_back( p2, card );
 
+  // assert p1->id == -1 or p1->id == some players.id
+  if ( p1->id >= 0 && p1->id < PLAYERS_NUM  ) {
+    Player *player = &(PLAYERS_LIST[p1->id]);
+    if ( player->state == IS_DEAD ) return true;
+    skills[player->role]( player );  
+  }
   return true;
 }
 
 // 把player 1 所有的牌給 player 2，包含手牌、装備
 void takeAllCards( Player *p1, Player *p2 ) {
-    if ( p1 == NULL || p2 == NULL ) return;
-    for ( int i = 0; i < p1->handcard->size; i++ ) {
-        Card card = pop_back( p1->handcard );
-        card.sticker = card.kind;
-        push_back( p2->handcard, card );
-    }
-    for ( int i = 0; i < p1->weapon->size; i++ ) {
-        Card card = pop_back( p1->weapon );
-        card.sticker = card.kind;
-        push_back( p2->handcard, card );
-    }
-    for ( int i = 0; i < p1->shield->size; i++ ) {
-        Card card = pop_back( p1->shield );
-        card.sticker = card.kind;
-        push_back( p2->handcard, card );
-    }
-    for ( int i = 0; i < p1->distance_item->size; i++ ) {
-        Card card = pop_back( p1->distance_item );
-        card.sticker = card.kind;
-        push_back( p2->handcard, card );
-    }
+  if ( p1 == NULL || p2 == NULL ) return;
+  if ( p2->state == IS_DEAD ) return;
+  for ( int i = 0; i < p1->handcard->size; i++ ) {
+      Card card = pop_back( p1->handcard );
+      if ( card.suit == -1 ) continue;
+      card.sticker = card.kind;
+      push_back( p2->handcard, card );
+  }
+  for ( int i = 0; i < p1->weapon->size; i++ ) {
+    Card card = pop_back( p1->weapon );
+    if ( card.suit == -1 ) continue;
+    card.sticker = card.kind;
+    push_back( p2->handcard, card );
+  }
+  for ( int i = 0; i < p1->shield->size; i++ ) {
+    Card card = pop_back( p1->shield );
+    if ( card.suit == -1 ) continue;
+    card.sticker = card.kind;
+    push_back( p2->handcard, card );
+  }
+  for ( int i = 0; i < p1->distance_item->size; i++ ) {
+    Card card = pop_back( p1->distance_item );
+    if ( card.suit == -1 ) continue;
+    card.sticker = card.kind;
+    push_back( p2->handcard, card );
+  }
+
+  // assert p1->id == -1 or p1->id == some players.id
+  if ( p1->id >= 0 && p1->id < PLAYERS_NUM  ) {
+    Player *player = &(PLAYERS_LIST[p1->id]);
+    if ( player->state == IS_DEAD ) return;
+    skills[player->role]( player );  
+  }
 }
 
 // 回傳此種sticker 種類卡牌位置，沒有則回傳-1
@@ -275,23 +308,44 @@ void calcDistance() {
     k++;
   }
 
-  // puts( "tmpArr" );
-  // for(int i=0;i<ALIVE_NUM;i++)
-  // {
-  //   for(int j=0; j<ALIVE_NUM; j++)
-  //   {
-  //     printf( "%d ", tmpArr[i][j] );
-  //   }
-  //   puts("");
-  // }
+}
 
-  // puts( "Distance" );
-  // for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-  //   for ( int j = 0; j < PLAYERS_NUM; j++ ) {
-  //     printf( "%d ", DISTANCE[i][j] );
-  //   }
-  //   puts("");
-  // }
-  
-  
+bool judgeFunc( Player *player, int kind ) {
+    Card card = getJudgementCard( player );
+    printf( "%sJudge card:%s\n", RESET, RESET );
+
+    if ( kind == JAIL ) {
+        if ( card.suit == 2 ){
+          printCard( card, GREEN );
+          return true; // 玩家越獄成功，棄掉監獄繼續進行回合
+        } 
+        else {
+          printCard( card, RED );
+          return false; // 棄掉監獄並暫停一回合
+        }
+    }
+    if ( kind == DYNAMITE ) {
+      if ( card.suit == 1 && ( card.number >= 2 && card.number <= 9 ) ) {
+        printCard( card, RED );
+        return false; // 玩家立刻損失3點血量並棄掉此牌繼續進行回合
+      }
+        
+      else {
+        printCard( card, GREEN );
+        return true; // 將炸藥傳給左手邊的玩家
+      }
+    }
+
+    if ( kind == BARREL ) {
+      if ( card.suit == 2 ) {
+        printCard( card, GREEN );
+        return true;
+      }
+      else {
+        printCard( card, RED );
+        return false;
+      }
+    }
+
+    return false;
 }
