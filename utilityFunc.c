@@ -1,36 +1,5 @@
 #include "utilityFunc.h"
 
-void print_player(int th)
-{   
-    printf("Player %d\n", th+1);
-    printf("Name : %s\n", PLAYERS_LIST[th].name);
-    printf("Role : %d\n", PLAYERS_LIST[th].role);
-    printf("State : %d\n", PLAYERS_LIST[th].state);
-    // printf("Equipment : ");
-    // for(int j = 0; j < PLAYERS_LIST[th].equipment->size; j++) {
-    //   printf("%d ", PLAYERS_LIST[th].equipment->data[j].kind); 
-    // }
-    printf( "Weapon : " );
-    for ( int i = 0; i < PLAYERS_LIST[th].weapon->size; i++ ) {
-        printf( "%d ", PLAYERS_LIST[th].weapon->data[i].kind );
-    }
-    printf( "\nShield : " );
-    for ( int i = 0; i < PLAYERS_LIST[th].shield->size; i++ ) {
-        printf( "%d ", PLAYERS_LIST[th].shield->data[i].kind );
-    }
-    printf( "\nDistance_item : " );
-    for ( int i = 0; i < PLAYERS_LIST[th].distance_item->size; i++ ) {
-        printf( "%d ", PLAYERS_LIST[th].distance_item->data[i].kind );
-    }
-    printf("\nHandcard : ");
-    for(int j = 0; j < PLAYERS_LIST[th].handcard->size; j++) {
-      printf("%d ", PLAYERS_LIST[th].handcard->data[j].kind); 
-    }
-        
-    printf("\n");
-    printf("Identity : %d\n\n\n", PLAYERS_LIST[th].identity);    
-}
-
 /*棄牌區的牌丟牌庫*/
 void shuffle() {
     srand(time(NULL));
@@ -47,13 +16,11 @@ void shuffle() {
         push_back(deck, tmp);
     }
     clear_vector(discardPile);
-    #ifdef DEBUG
-      puts( "shuffle" );
-      ENTER;
-    #endif
+   
 }
 
 int cardHandler( Player * player, int num ) {
+  if ( player == NULL ) return 0;
   if ( num >= deck->size ) {
       shuffle();
   }    
@@ -70,8 +37,10 @@ int cardHandler( Player * player, int num ) {
   
   int tmpstate = player->state;
   player->state = AFTER_GET;
+
+  if ( SKILL_RANGE(player->role) )
+      skills[player->role]( player ); 
   
-  // skills[player->role]( player ); 
   player->state = tmpstate;
   
 
@@ -80,31 +49,33 @@ int cardHandler( Player * player, int num ) {
 }
 
 bool discardCard( Card_vector * cards, int index ) {
-    if ( cards == NULL ) return false;
-    if ( isEmpty( cards ) ) return false;
-    Card tmp = get_element( cards, index);
-    remove_element((cards), index);
-    // 如果是內建則直接丟棄
-    if( tmp.suit == -1 ) {
-        return true;
-    }
-    tmp.sticker = tmp.kind;
-    push_back(discardPile, tmp);
+  if ( cards == NULL ) return false;
+  if ( isEmpty( cards ) ) return false;
+  Card tmp = get_element( cards, index);
+  remove_element((cards), index);
+  // 如果是內建則直接丟棄
+  if( tmp.suit == -1 ) {
+      return true;
+  }
+  tmp.sticker = tmp.kind;
+  push_back(discardPile, tmp);
 
-    // assert cards->id == -1 or cards->id == some players.id
-    if ( cards->id >= 0 && cards->id < PLAYERS_NUM  ) {
-      Player *player = &(PLAYERS_LIST[cards->id]);
-      if ( player->state == IS_DEAD ) return true;
-      
-      int tmpstate = player->state;
-      player->state = DISCARD_CARD;
-      // printf("%s %s\n", roleName[player->role], player->name);
-      // ENTER;
-      // skills[player->role]( player ); 
-      player->state = tmpstate;
-    }
+  // assert cards->id == -1 or cards->id == some players.id
+  if ( cards->id >= 0 && cards->id < PLAYERS_NUM  ) {
+    Player *player = &(PLAYERS_LIST[cards->id]);
+    if ( player->state == IS_DEAD ) return true;
     
-    return true;
+    int tmpstate = player->state;
+    player->state = DISCARD_CARD;
+    // puts( "utilityFunc 71" );
+    // printf( "role: %d\n", player->role );
+    // ENTER;
+    if ( SKILL_RANGE(player->role) )
+      skills[player->role]( player ); 
+    player->state = tmpstate;
+  }
+    
+  return true;
 }
 
 // 棄掉所有的牌，包含手牌、装備
@@ -117,10 +88,11 @@ void discardAllCard( Player *player ) {
     push_back(discardPile, tmp);
   }
 
-  // bool UnloadWeapon( Player* player, Card_vector *cards );
+  // bool UnloadEquip( Player* player, int kind )
   while ( !isEmpty( player->weapon ) ) {
     Card tmp = pop_back(player->weapon);
     if ( tmp.suit == -1 ) continue;
+    UnloadEquip( player, tmp.kind );
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
   }
@@ -129,73 +101,65 @@ void discardAllCard( Player *player ) {
   while ( !isEmpty(player->shield) ) {
     Card tmp = pop_back(player->shield);
     if ( tmp.suit == -1 ) continue;
+    UnloadEquip( player, tmp.kind );
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
   }
-  player->equipShield = NONE;
+
   while ( !isEmpty( player->distance_item ) ) {
     Card tmp = pop_back(player->distance_item);
     if ( tmp.suit == -1 ) continue;
+    UnloadEquip( player, tmp.kind );
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
   }
-  player->equipScope = NONE;
-  player->equipMustang = NONE;
 
-  while ( !isEmpty( player->judgeCards ) ) {
+
+  while ( player->state == IS_DEAD && !isEmpty( player->judgeCards ) ) {
     Card tmp = pop_back(player->judgeCards);
     if ( tmp.suit == -1 ) continue;
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
   }
 
-  // asssert the player is already dead
+  // ASSERT( player->state == IS_DEAD );
   if ( player->state == IS_DEAD ) return;
-    // printf("%s %s\n", roleName[player->role], player->name);
-    //   ENTER;
-  // skills[player->role]( player ); 
-}
-
-void printCard( Card card, char *color ) 
-{
-    // printf( "is_orange: %d\n", card.is_orange );
-    printf( "%ssuit: %s%s\n", color, suitName[card.suit], RESET );
-    printf( "%snumber: %d%s\n", color, card.number, RESET );
-    // printf( "attribute: %d\n", card.attribute );
-    printf( "%skind: %s%s\n", color, cardKindName[card.kind], RESET );
-    printf( "%sSticker: %s%s\n", color, cardKindName[card.sticker], RESET );
+  
+  ASSERT( SKILL_RANGE(player->role) );
+  if ( SKILL_RANGE(player->role) )
+    skills[player->role]( player );
 }
 
 void clean_buffer(char *arr)
 {
-    if(arr[strlen(arr)-1] == '\n')
-        arr[strlen(arr)-1] = 0;
-    else {
-        int32_t c = 0;
-        while((c = fgetc(stdin)) != '\n' && c != EOF){}
-    }
+  if(arr[strlen(arr)-1] == '\n')
+    arr[strlen(arr)-1] = 0;
+  else {
+    int32_t c = 0;
+    while((c = fgetc(stdin)) != '\n' && c != EOF){}
+  }
 }
 
 int scan(int min, int max, char *str)
 {
-    int warn = 0, choice = -1;
-    char *input = malloc(1000);
-    while(1) {
-        if(warn) printf("Wrong input.\n\n");
-        printf("%s", str);
-        fgets(input, 1000, stdin);
-        clean_buffer(input);
-        choice = strtol(input, NULL , 10);
-        if( strcmp( input, "0") != 0 && choice == 0 ) {
-            warn++;            
-            continue;
-        }
-        warn++;
-        if(choice >= min && choice <= max) break;
-    }  
+  int warn = 0, choice = -1;
+  char *input = malloc(1000);
+  while(1) {
+    if(warn) printf("Wrong input.\n\n");
+    printf("%s", str);
+    fgets(input, 1000, stdin);
+    clean_buffer(input);
+    choice = strtol(input, NULL , 10);
+    if( strcmp( input, "0") != 0 && choice == 0 ) {
+      warn++;            
+      continue;
+    }
+    warn++;
+    if(choice >= min && choice <= max) break;
+  }  
 
-    free( input );
-    return choice;
+  free( input );
+  return choice;
 }
 
 // 把牌從 player1第[index]張牌給player2, index = 0, 1, 2....
@@ -213,9 +177,10 @@ bool takeCard( Card_vector *p1, Card_vector *p2, int index ) {
   if ( p1->id >= 0 && p1->id < PLAYERS_NUM  ) {
     Player *player = &(PLAYERS_LIST[p1->id]);
     if ( player->state == IS_DEAD ) return true;
-      // printf("%s %s\n", roleName[player->role], player->name);
-      // ENTER;
-    // skills[player->role]( player );  
+      
+    ASSERT( SKILL_RANGE(player->role) );
+    if ( SKILL_RANGE(player->role) )
+      skills[player->role]( player ); 
   }
   return true;
 }
@@ -233,18 +198,21 @@ void takeAllCards( Player *p1, Player *p2 ) {
   for ( int i = 0; i < p1->weapon->size; i++ ) {
     Card card = pop_back( p1->weapon );
     if ( card.suit == -1 ) continue;
+    UnloadEquip( p1, card.kind );
     card.sticker = card.kind;
     push_back( p2->handcard, card );
   }
   for ( int i = 0; i < p1->shield->size; i++ ) {
     Card card = pop_back( p1->shield );
     if ( card.suit == -1 ) continue;
+    UnloadEquip( p1, card.kind );
     card.sticker = card.kind;
     push_back( p2->handcard, card );
   }
   for ( int i = 0; i < p1->distance_item->size; i++ ) {
     Card card = pop_back( p1->distance_item );
     if ( card.suit == -1 ) continue;
+    UnloadEquip( p1, card.kind );
     card.sticker = card.kind;
     push_back( p2->handcard, card );
   }
@@ -253,9 +221,10 @@ void takeAllCards( Player *p1, Player *p2 ) {
   if ( p1->id >= 0 && p1->id < PLAYERS_NUM  ) {
     Player *player = &(PLAYERS_LIST[p1->id]);
     if ( player->state == IS_DEAD ) return;
-      // printf("%s %s\n", roleName[player->role], player->name);
-      // ENTER;
-    // skills[player->role]( player );  
+      
+    ASSERT( SKILL_RANGE(player->role) );
+    if ( SKILL_RANGE(player->role) )
+      skills[player->role]( player );   
   }
 }
 
@@ -376,3 +345,4 @@ bool judgeFunc( Player *player, int kind ) {
 
     return false;
 }
+

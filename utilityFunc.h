@@ -8,10 +8,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-void print_player(int th);
+
 int cardHandler( Player * player, int num );
 bool discardCard( Card_vector * cards, int index );
-void printCard( Card card, char *color );
 void clean_buffer(char *arr);
 int scan(int min, int max, char *str);
 void shuffle();

@@ -10,3 +10,5 @@
 void printHandCard( Card_vector *cards, int color[], bool visible );
 int setColor( int **c, int index, int kind, int attribute, Card_vector* handcard, int color ) ;
 void printUI( Player *nowPlayer );
+void print_player(int th);
+void printCard( Card card, char *color );

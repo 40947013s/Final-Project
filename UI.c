@@ -100,7 +100,8 @@ int setColor( int **c, int index, int kind, int attribute, Card_vector* cards, i
   return num;
 }
 
-void printUI( Player *nowPlayer ) {
+void printUI( Player *nowPlayer ) 
+{
   int indexOfSheriff = SHERIFF_POSITION;
   int indexOfNowPlayer = 0;
   // find the position of the now player
@@ -112,7 +113,9 @@ void printUI( Player *nowPlayer ) {
   }
 
   system("clear");
-  puts("---------------------------------------------------------------------------------------");
+  for ( int i = 0; i < PLAYERS_NUM + 1; i++ ) printf( "---------------" );
+  puts("");
+  // puts("---------------------------------------------------------------------------------------");
   printf( "%s%-15s%s", GRAY_BACK, "ID", RESET );
   for ( int i = 0; i < PLAYERS_NUM; i++ ) {
       printf( "%s%-18d%s", GRAY_BACK, PLAYERS_LIST[i].id, RESET );
@@ -225,7 +228,10 @@ void printUI( Player *nowPlayer ) {
   }
   puts("");
 
-  puts("---------------------------------------------------------------------------------------");
+  
+  for ( int i = 0; i < PLAYERS_NUM + 1; i++ ) printf( "---------------" );
+  puts("");
+  // puts("---------------------------------------------------------------------------------------");
   printf( "%-15s", "Weapon" );
   for (int i = 0; i < PLAYERS_NUM; i++) {
       if ( isEmpty(PLAYERS_LIST[i].weapon) )
@@ -240,8 +246,10 @@ void printUI( Player *nowPlayer ) {
   for (int i = 0; i < PLAYERS_NUM; i++) {
       if ( isEmpty(PLAYERS_LIST[i].shield) )
           printf("%s%-18s%s", RESET, "None", RESET );
+      else if ( get_element(PLAYERS_LIST[i].shield, 0).suit == -1 && PLAYERS_LIST[i].shield->size == 1 ) 
+        printf("%s%-18s%s", GRAY, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind], RESET );
       else
-          printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind], RESET );
+        printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind], RESET );
   }
   puts("");
 
@@ -263,18 +271,67 @@ void printUI( Player *nowPlayer ) {
   }
   puts("");
 
-  printf( "%-15s", "Judge Card" );
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-      if ( isEmpty(PLAYERS_LIST[i].judgeCards) )
+  
+  bool still_have_card = true;
+  for ( int j = 0; still_have_card; j++ ) {
+    printf( "%-15s", "Judge Card" );
+    still_have_card = false;
+    for (int i = 0; i < PLAYERS_NUM; i++) {
+      if ( j >= PLAYERS_LIST[i].judgeCards->size )
           printf("%s%-18s%s", RESET, "None", RESET );
-      else
-          printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].judgeCards, 0).kind], RESET );
+      else {
+        printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].judgeCards, j).kind], RESET );
+        if ( j+1 < PLAYERS_LIST[i].judgeCards->size ) still_have_card = true;
+        
+      }
+    
+    }
+    puts( "" );
   }
+
+  for ( int i = 0; i < PLAYERS_NUM + 1; i++ ) printf( "---------------" );
   puts("");
+  // puts("---------------------------------------------------------------------------------------");
 
-  puts("---------------------------------------------------------------------------------------");
+  printf( "Now turn: %s\t\tDeck number: %d\t\tDiscard Pile number: %d\n", nowPlayer->name, deck->size, discardPile->size );
 
-  printf( "%s's turn\n", nowPlayer->name );
-  printf( "%s%d %s%d\n", "Deck number: ", deck->size, "Discard number: ",discardPile->size );
+}
 
+void print_player(int th)
+{   
+    printf("Player %d\n", th+1);
+    printf("Name : %s\n", PLAYERS_LIST[th].name);
+    printf("Role : %d\n", PLAYERS_LIST[th].role);
+    printf("State : %d\n", PLAYERS_LIST[th].state);
+
+    printf( "Weapon : " );
+    for ( int i = 0; i < PLAYERS_LIST[th].weapon->size; i++ ) {
+        printf( "%d ", PLAYERS_LIST[th].weapon->data[i].kind );
+    }
+    printf( "\nShield : " );
+    for ( int i = 0; i < PLAYERS_LIST[th].shield->size; i++ ) {
+        printf( "%d ", PLAYERS_LIST[th].shield->data[i].kind );
+    }
+    printf( "\nDistance_item : " );
+    for ( int i = 0; i < PLAYERS_LIST[th].distance_item->size; i++ ) {
+        printf( "%d ", PLAYERS_LIST[th].distance_item->data[i].kind );
+    }
+    printf("\nHandcard : ");
+    for(int j = 0; j < PLAYERS_LIST[th].handcard->size; j++) {
+      printf("%d ", PLAYERS_LIST[th].handcard->data[j].kind); 
+    }
+        
+    printf("\n");
+    printf("Identity : %d\n\n\n", PLAYERS_LIST[th].identity);    
+}
+
+
+void printCard( Card card, char *color ) 
+{
+  // printf( "is_orange: %d\n", card.is_orange );
+  // printf( "attribute: %d\n", card.attribute );
+  printf( "%ssuit: %s%s\n", color, suitName[card.suit], RESET );
+  printf( "%snumber: %d%s\n", color, card.number, RESET );
+  printf( "%skind: %s%s\n", color, cardKindName[card.kind], RESET );
+  printf( "%sSticker: %s%s\n", color, cardKindName[card.sticker], RESET );
 }

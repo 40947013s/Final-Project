@@ -15,24 +15,20 @@ Card_vector* deck;
 Card_vector* discardPile;
 
 //Skill function
+// Skill skills[16] = {
+//     fBart_Cassidy, fBlack_Jack, fCalamity_Janet, nullFunc,
+//     fJesse_Jones, fJourdonnais, fKit_Carlson, nullFunc,
+//     fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
+//     fSlab_the_Killer, fSuzy_Lafayette, nullFunc, fWilly_the_Kid
+// };
+
 Skill skills[16] = {
-    fBart_Cassidy, fBlack_Jack, fCalamity_Janet, nullFunc,
+    nullFunc, fBlack_Jack, nullFunc, nullFunc,
     fJesse_Jones, fJourdonnais, fKit_Carlson, nullFunc,
-    fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
-    fSlab_the_Killer, fSuzy_Lafayette, nullFunc, fWilly_the_Kid
+    fPaul_Regret, fPedro_Ramirez, fRose_Doolan, nullFunc,
+    fSlab_the_Killer, nullFunc, nullFunc, fWilly_the_Kid
 };
 
-
-// typedef enum _card_kind
-// {
-//     BANG, MISSED, GATLING, INDIANS, PANIC, 
-//     CAT, STAGECOACH, WELLS, STORE, BEER, 
-//     SALOOW, DUEL, 
-    
-//     BARREL, SCOPE, MUSTANG, 
-//     JAIL, DYNAMITE, VOLCANIC, SCHOFIELD, 
-//     REMINGTON, REV, WINCHEDTER, NONE
-// } Kind;
 
 // Orange Card
 OrangeCard orangeCards[12] = { Bang, nullFunc2, Gatling, Indians, panic,
@@ -153,6 +149,23 @@ void role_shuffle() {
             PLAYERS_LIST[i].hp --, PLAYERS_LIST[i].hp_limit --;
         }
     }
+
+//Skill function
+// Skill skills[16] = {
+//     fBart_Cassidy, fBlack_Jack, fCalamity_Janet, nullFunc,
+//     fJesse_Jones, fJourdonnais, fKit_Carlson, nullFunc,
+//     fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
+//     fSlab_the_Killer, fSuzy_Lafayette, nullFunc, fWilly_the_Kid
+// };
+    #ifdef DEBUG
+      PLAYERS_LIST[0].role = Black_Jack;
+      PLAYERS_LIST[1].role = Jesse_Jones;
+      // PLAYERS_LIST[1].hp --, PLAYERS_LIST[1].hp_limit --;
+      PLAYERS_LIST[2].role = Kit_Carlson;
+      PLAYERS_LIST[3].role = Pedro_Ramirez;
+      // PLAYERS_LIST[4].role = Willy_the_Kid;
+  
+    #endif
 }
 
 void game_prepare()

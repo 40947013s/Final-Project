@@ -30,17 +30,17 @@ void IsGameOver( Player *killer, Player *player ){
     
     printf( "You are dying\n" );
     printf( "Are you going to use beer to add up hp?\n" );
-    int choice = scan( 0, 1, "1: yes, 0: no" );
+    int choice = scan( 0, 1, "(1: yes, 0: no) " );
     if ( choice == 1 ) {
       Card beer = chooseCard( player, player->handcard, BEER, NULL, false,  true );
         if ( beer.number != -1 ) {
             Beer( player, killer );
             return;
+        } else {
+            puts( "You didn't have beer" );
+            ENTER;
         }
-    } else {
-        puts( "You didn't have beer" );
-        ENTER;
-    }
+    } 
   }
 
 
@@ -107,7 +107,8 @@ void IsGameOver( Player *killer, Player *player ){
     if ( GAME_STATE == END ) {
       puts( "Game Over" );
       ENTER;
-      return;
+      exit(0);
+      // return;
     }
 
     if ( killer != NULL && killer->state != IS_DEAD ) { 
@@ -129,17 +130,17 @@ void IsGameOver( Player *killer, Player *player ){
     }
 
     if ( player->identity == Deputies && killer->identity == Sheriff ) {
-          printUI( killer );
-          puts( "You killed your deputy!" );
-          puts( "You have to discard all you handcards and equipments" );
-          UnloadWeapon( killer, killer->weapon );
-          if ( killer->equipScope != NONE ) 
-            UnloadScope( killer, killer->distance_item );
-          if ( killer->equipMustang != NONE )
-            UnloadMustang( killer, killer->distance_item );
+      printUI( killer );
+      puts( "You killed your deputy!" );
+      puts( "You have to discard all you handcards and equipments" );
+      ENTER;
+      // UnloadWeapon( killer, killer->weapon );
+      // if ( killer->equipScope != NONE ) 
+      //   UnloadScope( killer, killer->distance_item );
+      // if ( killer->equipMustang != NONE )
+      //   UnloadMustang( killer, killer->distance_item );
 
-          discardAllCard( killer );
-          ENTER;
+      discardAllCard( killer );
     }
     discardAllCard( player );
   }
@@ -270,6 +271,14 @@ bool Bang( Player *attacker ){
     return false; // 若沒有使用的對象，則不算有使用bang，所以不丟棄那張牌
   }
   printf( "Player %s is attacked by %s\n", defender->name, attacker->name );
+
+  if ( attacker->role == Slab_the_Killer ) {
+    printUI( defender );
+    printf( "Active Slab_the_Killer's skill\n" );
+    printf( "You have to use two (MISS/BARREL) to avoid his BANG\n" );
+    ENTER;
+  }
+  
   bool miss = Miss( defender, attacker->attack_power );
 
   printUI( attacker );

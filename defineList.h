@@ -1,7 +1,7 @@
 #pragma once
 
 #include "structList.h"
-
+#include <assert.h>
 #define IS_BANG(x) x >= 0 && x <= 24
 #define IS_MISSED(x) x >= 25 && x <= 36
 #define IS_GATLING(x) x == 37
@@ -40,9 +40,11 @@
 #define RESET "\033[0m"
 
 #define ENTER printf("\n%s%sPress Enter to Continue%s", "\033[100m", GRAY, RESET); while( getchar() != '\n' )
+#define SKILL_RANGE(x) ( x >= 0 && x < 16 )
 
 typedef void (*Skill) ( void *this );
 typedef bool (*OrangeCard) ( Player *this );
 typedef bool (*BlueCard) ( Player *player, int pos );
 
 #define DEBUG
+#define ASSERT(x) assert(x)
