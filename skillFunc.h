@@ -20,4 +20,3 @@ void fSlab_the_Killer( void* this );
 void fSuzy_Lafayette( void* this );
 void fWilly_the_Kid( void* this );
 void nullFunc( void *this);
-Card getJudgementCard( Player *player );

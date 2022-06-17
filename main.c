@@ -34,14 +34,21 @@ void playerCard( Player *player, int *numOfBang ) {
     puts( "You have unlimited times to use BANG" );
     ENTER;
   }
+
+   if ( player->role == Calamity_Janet ) {
+    setColor( &color, -1, MISSED, 0, player->handcard, 3 );
+  }
   
   if ( *numOfBang == 0 && player->numOfBang != -1 ) {
     setColor( &color, -1, BANG, 0, player->handcard, 0 );
+    setColor( &color, -1, MISSED, 0, player->handcard, 0 );
   }
 
   if ( ALIVE_NUM <= 2 ) {
     setColor( &color, -1, BEER, 0, player->handcard, 0 );
   }
+
+ 
   
   if ( player->hp >= player->hp_limit ) {
     setColor( &color, -1, SALOOW, 0, player->handcard, 0 );
@@ -88,8 +95,14 @@ void playerCard( Player *player, int *numOfBang ) {
               Card c = get_element( player->handcard, choice-1 );
               discardCard( player->handcard, choice-1 );
             }
-            else if ( orangeCards[tmp.sticker]( player ) ) {
-              if ( tmp.kind == BANG || tmp.sticker == BANG ) {
+            else if ( tmp.attribute == 1 && orangeCards[tmp.kind]( player ) ) {
+              if ( tmp.kind == BANG ) {
+                if ( *numOfBang != -1 ) (*numOfBang)--;
+              }
+              discardCard( player->handcard, choice-1 );
+            }
+            else if ( tmp.attribute == 2 && orangeCards[tmp.sticker]( player ) ) {
+              if ( tmp.sticker == BANG ) {
                 if ( *numOfBang != -1 ) (*numOfBang)--;
               }
               discardCard( player->handcard, choice-1 );
@@ -123,21 +136,22 @@ void judgeTurn( Player *player, Player *nextPlayer ) {
     Card card = get_element( player->judgeCards, i );
     if ( card.kind == DYNAMITE ) {
       printUI( player );
-      printf( "%sJudge dynamite%s\n", BLUE, RESET );
+      printf( "%sJudge dynamite%s\n\n", BLUE, RESET );
       judge = judgeFunc( player, DYNAMITE );
       if ( judge ) {
         printf( "%sJudgment successful%s\n", GREEN, RESET );
         ENTER;
         takeCard( player->judgeCards, nextPlayer->judgeCards, i );
-        i--;
       }
       else {
+        discardCard( player->judgeCards, i );
         printf( "%sJudgment failed%s\n", RED, RESET );
         printf( "Player %s loses 3 hp", player->name );
         ENTER;
         HPModify( NULL, player, -3, DYNAMITE );
         if ( GAME_STATE == END ) return;
       }
+      i--;
     }
   }
 

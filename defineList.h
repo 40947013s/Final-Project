@@ -46,5 +46,5 @@ typedef void (*Skill) ( void *this );
 typedef bool (*OrangeCard) ( Player *this );
 typedef bool (*BlueCard) ( Player *player, int pos );
 
-#define DEBUG
+// #define DEBUG
 #define ASSERT(x) assert(x)

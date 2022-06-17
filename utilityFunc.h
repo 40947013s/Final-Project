@@ -22,4 +22,5 @@ void setPlayer( Player *p1, Player *p2 );
 int find_position( int id );
 int min(int a, int b);
 void calcDistance() ;
+Card getJudgementCard( Player *player, int kind );
 bool judgeFunc( Player *player, int kind );

@@ -1,4 +1,6 @@
 #include "init.h"
+#include <unistd.h>
+#include <getopt.h>
 
 int PLAYERS_NUM, DEAD_NUM; //遊戲人數
 int SHERIFF_NUM, DEPUTIES_NUM, OUTLAWS_NUM, RENEGADE_NUM; //身分人數
@@ -22,11 +24,13 @@ Card_vector* discardPile;
 //     fSlab_the_Killer, fSuzy_Lafayette, nullFunc, fWilly_the_Kid
 // };
 
+
+// new: fBart_Cassidy, fSid_Ketchum, fSuzy_Lafayette, fCalamity_Janet
 Skill skills[16] = {
-    nullFunc, fBlack_Jack, nullFunc, nullFunc,
+    fBart_Cassidy, fBlack_Jack, fCalamity_Janet, nullFunc,
     fJesse_Jones, fJourdonnais, fKit_Carlson, nullFunc,
-    fPaul_Regret, fPedro_Ramirez, fRose_Doolan, nullFunc,
-    fSlab_the_Killer, nullFunc, nullFunc, fWilly_the_Kid
+    fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
+    fSlab_the_Killer, fSuzy_Lafayette, nullFunc, fWilly_the_Kid
 };
 
 
@@ -48,10 +52,10 @@ char *identityName[] = { "Sheriff", "Deputies", "Outlaws", "Renegade" };
 
 // 角色
 char *roleName[] = {
-    "Bart Cassidy", "Black Jack", "Calamity Janet", "El Gringo", 
-    "Jesse Jones", "Jourdonnais", "Kit Carlson", "Lucky Duke",
-    "Paul Regret", "Pedro Ramirez", "Rose Doolan", "Sid Ketchum",
-    "Slab the Killer", "Suzy Lafayette", "Vulture Sam", "Willy the Kid"
+    "Bart_Cassidy", "Black_Jack", "Calamity_Janet", "El_Gringo", 
+    "Jesse_Jones", "Jourdonnais", "Kit_Carlson", "Lucky_Duke",
+    "Paul_Regret", "Pedro Ramirez", "Rose Doolan", "Sid_Ketchum",
+    "Slab_the_Killer", "Suzy_Lafayette", "Vulture_Sam", "Willy_the_Kid"
 };
 
 // 消耗牌+裝備牌
@@ -70,7 +74,7 @@ char *suitName[] = { "none", "spade", "heart", "diamond", "club" };
 char *Color[11] = { RESET, RED, YELLOW, GREEN, BLUE, MAG, CYN, WHT, GRAY, GRAY_BACK, RED_BACK };
 
 // State
-char *stateName[11] = { "SET", "JUDGE", "GET_CARD", "AFTER_GET", "PLAY_CARD", "DISCARD_CARD", "MINUS_HP", "FIGHT", "ATTACKED", "FINISH", "DEAD"};
+char *stateName[12] = { "SET", "JUDGE", "GET_CARD", "AFTER_GET", "PLAY_CARD", "DISCARD_CARD", "MINUS_HP", "FIGHT", "ATTACKED", "FINISH", "DEAD"};
 
 void init_player(Player *i)
 {
@@ -133,8 +137,36 @@ void role_shuffle() {
             k = (k+1) % 16;
         }
         is_take[k] = true;
+      
         // print role j
+        char str[1000] = {0};
+        strcpy( str, "grep " );
+        strcat( str, roleName[j] );
+        strcat( str, " role_skill.txt | awk '{print $2}' > j.txt" );
+        
+        system( str );
+        FILE *pFile = pFile = fopen( "j.txt", "r" );
+        assert( pFile != NULL );
+        fgets( str, 1000, pFile );
+        printf( "%sRole1: %s%s\n\n", BLUE, roleName[j], RESET );
+        printf( "%sSkill detail: %s\n%s\n", MAG, RESET, str );
+
         // print role k
+        strcpy( str, "grep " );
+        strcat( str, roleName[k] );
+        strcat( str, " role_skill.txt | awk '{print $2}' > k.txt" );
+        
+        system( str );
+        pFile = pFile = fopen( "k.txt", "r" );
+        assert( pFile != NULL );
+        fgets( str, 1000, pFile );
+        printf( "%sRole2: %s%s\n\n", BLUE, roleName[k], RESET );
+        printf( "%sSkill detail: %s\n%s\n", MAG, RESET, str );
+
+        remove( "j.txt" );
+        remove( "k.txt" );
+
+      
         puts( "Which role card to choose (0 or 1): " );
         printf( "[0] %s, [1] %s\n", roleName[j], roleName[k]);
         int choice = scan(0, 1, "--> ");
@@ -143,29 +175,20 @@ void role_shuffle() {
         } else {
             PLAYERS_LIST[i].role = k, res = k;
         }
-        printf( "Your role: %s\n\n", roleName[res] );
+        printf( "%sYour role: %s%s\n\n", YELLOW, roleName[res], RESET );
         PLAYERS_LIST[i].hp = 4, PLAYERS_LIST[i].hp_limit = 4;
         if( res == El_Gringo || res == Paul_Regret ) {
             PLAYERS_LIST[i].hp --, PLAYERS_LIST[i].hp_limit --;
         }
     }
-
-//Skill function
-// Skill skills[16] = {
-//     fBart_Cassidy, fBlack_Jack, fCalamity_Janet, nullFunc,
-//     fJesse_Jones, fJourdonnais, fKit_Carlson, nullFunc,
-//     fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
-//     fSlab_the_Killer, fSuzy_Lafayette, nullFunc, fWilly_the_Kid
-// };
-    #ifdef DEBUG
-      PLAYERS_LIST[0].role = Black_Jack;
-      PLAYERS_LIST[1].role = Jesse_Jones;
-      // PLAYERS_LIST[1].hp --, PLAYERS_LIST[1].hp_limit --;
-      PLAYERS_LIST[2].role = Kit_Carlson;
-      PLAYERS_LIST[3].role = Pedro_Ramirez;
-      // PLAYERS_LIST[4].role = Willy_the_Kid;
-  
-    #endif
+    
+  #ifdef DEBUG 
+    PLAYERS_LIST[0].role = Vulture_Sam;
+    PLAYERS_LIST[1].role = Lucky_Duke;
+    PLAYERS_LIST[2].role = Sid_Ketchum;
+    PLAYERS_LIST[3].role = Rose_Doolan;
+    PLAYERS_LIST[3].hp = 2, PLAYERS_LIST[3].hp_limit = 2;
+  #endif
 }
 
 void game_prepare()
@@ -183,8 +206,11 @@ void game_prepare()
       init_player(&PLAYERS_LIST[i]);
         
         PLAYERS_LIST[i].handcard->id = i;
-        printf("Input the name of player %d : ", i+1);
-        fgets(players, 1000, stdin);
+        printf( "Input the name of player %d : ", i+1 );
+        fgets( players, 1000, stdin );
+        if( strcmp( players, "\n") == 0 ) {
+            sprintf( players, "Player %d", i );
+        }
         clean_buffer(players);
         strcpy(PLAYERS_LIST[i].name, players);
         //printf("%s\n",PLAYERS_LIST[i].name);

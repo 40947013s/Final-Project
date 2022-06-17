@@ -1,15 +1,13 @@
 #include "test.h"
 
-void HPModify( Player* attacker, Player *defender, int n, Kind reason ){
-  if ( n < 0 ) {
-    printf( "Player %s minus %d hp.\n", defender->name, n );
-    ENTER;
+void HPModify( Player* attacker, Player *defender, int n, Kind reason ) {
+  if ( n < 0 ) {    
     RMode tmp = defender->state;
     defender->state = MINUS_HP;
-      // printf("%s %s\n", roleName[defender->role], defender->name);
-      // ENTER;
-    // skills[defender->role]( defender );
-    // fEl_Gringo( defender, attacker, n, reason );
+    skills[defender->role]( defender );
+    fEl_Gringo( defender, attacker, n, reason );
+    printf( "Player %s minus %d hp.\n", defender->name, -n );
+    ENTER;
     defender->state = tmp;
     defender->hp += n;
   }
@@ -25,7 +23,7 @@ void HPModify( Player* attacker, Player *defender, int n, Kind reason ){
 // if killer is null, then there is no killer
 // e.g. if the player is killed by dynamite, there is no killer
 void IsGameOver( Player *killer, Player *player ){
-  if ( player->hp <= 0 ) {
+  if ( player->hp <= 0 && ALIVE_NUM > 2 ) {
 // bool Beer( Player *player, killer ); 
     
     printf( "You are dying\n" );
@@ -33,13 +31,13 @@ void IsGameOver( Player *killer, Player *player ){
     int choice = scan( 0, 1, "(1: yes, 0: no) " );
     if ( choice == 1 ) {
       Card beer = chooseCard( player, player->handcard, BEER, NULL, false,  true );
-        if ( beer.number != -1 ) {
-            Beer( player, killer );
-            return;
-        } else {
-            puts( "You didn't have beer" );
-            ENTER;
-        }
+      if ( beer.number != -1 ) {
+          Beer( player, killer );
+          return;
+      } else {
+          puts( "You didn't have beer" );
+          ENTER;
+      }
     } 
   }
 
@@ -118,30 +116,27 @@ void IsGameOver( Player *killer, Player *player ){
       // discardAllCard( killer );
     }
 
-    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-      if ( PLAYERS_LIST[i].identity == Vulture_Sam && PLAYERS_LIST[i].hp > 0 ) {
-          printUI( PLAYERS_LIST + i );
-          puts( "You can take all the cards from the deceased" );
-          ENTER;
-          takeAllCards( player, &PLAYERS_LIST[i] );
-          puts( "Take!" );
-          ENTER;
-      }
-    }
-
     if ( player->identity == Deputies && killer->identity == Sheriff ) {
       printUI( killer );
       puts( "You killed your deputy!" );
       puts( "You have to discard all you handcards and equipments" );
       ENTER;
-      // UnloadWeapon( killer, killer->weapon );
-      // if ( killer->equipScope != NONE ) 
-      //   UnloadScope( killer, killer->distance_item );
-      // if ( killer->equipMustang != NONE )
-      //   UnloadMustang( killer, killer->distance_item );
-
       discardAllCard( killer );
     }
+
+    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+      if ( PLAYERS_LIST[i].role == Vulture_Sam && PLAYERS_LIST[i].state != IS_DEAD ) {
+        printUI( PLAYERS_LIST + i );
+        printf( "Active Vulture_Sam's skill\n" );
+        puts( "You can take all the cards from the deceased" );
+        ENTER;
+        takeAllCards( player, &PLAYERS_LIST[i] );
+        printUI( PLAYERS_LIST + i );
+        puts( "Take!" );
+        ENTER;
+      }
+    }
+    
     discardAllCard( player );
   }
 }
@@ -284,13 +279,16 @@ bool Bang( Player *attacker ){
   printUI( attacker );
 
   if ( !miss ) {
-    HPModify( attacker, defender, -1, BANG );
     printf( "successful attack!\n" );
+    HPModify( attacker, defender, -1, BANG );
   }
-  else
+  else {
     printf( "Missed attack!\n" );
+    ENTER;
+  }
+    
 
-  ENTER;
+  
 
   return true;
 
@@ -303,7 +301,7 @@ bool Miss( Player *defender, int n ) {
   for ( int i = 0; i < defender->shield->size; i++ ) {
 
     printUI( defender );
-    printf( "%sJudge barrel%s\n", BLUE, RESET );
+    printf( "%sJudge barrel%s\n\n", BLUE, RESET );
     bool result = judgeFunc( defender, BARREL );
     if ( result )
       printf( "%sJudgment successful%s\n", GREEN, RESET );
@@ -408,6 +406,7 @@ bool Store( Player *player ) {
     Player tmpPlayer, *p;
     int start = -1;
     tmpPlayer.handcard = create_vector(10);
+    tmpPlayer.state = IS_DEAD;
     for(int i = 0; i < PLAYERS_NUM; i++) {
         p = PLAYERS_LIST + i;
         if( p->id == player->id && p->state != IS_DEAD ) {
@@ -1011,12 +1010,21 @@ bool EquipDynamite( Player *player, int index ) {
 }
 
 bool EquipJail( Player *player , int index ) {
-    Player *choose_player = choosePlayer( player, -1 );
-    takeCard( player->handcard, choose_player->judgeCards, index );   
-    printUI( player );
-    puts( "Equip jail" );
-    ENTER;
-    return true;
+  Player *choose_player;
+  bool warn = false;
+  while ( 1 ) {
+    if ( warn ) 
+      printf( "You can't use jail on the Sheriff\n" );
+    choose_player = choosePlayer( player, -1 );
+    if ( choose_player->identity != Sheriff ) break;
+    warn = true;
+  }
+  
+  takeCard( player->handcard, choose_player->judgeCards, index );   
+  printUI( player );
+  puts( "Equip jail" );
+  ENTER;
+  return true;
 }
 
 bool EquipBarrel( Player *player, int index ) {

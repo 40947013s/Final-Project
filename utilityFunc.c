@@ -43,8 +43,6 @@ int cardHandler( Player * player, int num ) {
   
   player->state = tmpstate;
   
-
-
   return num;
 }
 
@@ -67,9 +65,7 @@ bool discardCard( Card_vector * cards, int index ) {
     
     int tmpstate = player->state;
     player->state = DISCARD_CARD;
-    // puts( "utilityFunc 71" );
-    // printf( "role: %d\n", player->role );
-    // ENTER;
+    ASSERT( SKILL_RANGE(player->role) );
     if ( SKILL_RANGE(player->role) )
       skills[player->role]( player ); 
     player->state = tmpstate;
@@ -150,10 +146,10 @@ int scan(int min, int max, char *str)
     fgets(input, 1000, stdin);
     clean_buffer(input);
     choice = strtol(input, NULL , 10);
-    if( strcmp( input, "0") != 0 && choice == 0 ) {
+    // if( strcmp( input, "0") != 0 && choice == 0 ) {
       warn++;            
-      continue;
-    }
+    //   continue;
+    // }
     warn++;
     if(choice >= min && choice <= max) break;
   }  
@@ -173,15 +169,37 @@ bool takeCard( Card_vector *p1, Card_vector *p2, int index ) {
   card.sticker = card.kind;
   push_back( p2, card );
 
-  // assert p1->id == -1 or p1->id == some players.id
-  if ( p1->id >= 0 && p1->id < PLAYERS_NUM  ) {
-    Player *player = &(PLAYERS_LIST[p1->id]);
-    if ( player->state == IS_DEAD ) return true;
-      
+  /// assert p1->id == -1 or p1->id == some players.id
+  Player *player;
+  if ( p1->id >= 0 && p1->id < PLAYERS_NUM )
+    player = &(PLAYERS_LIST[p1->id]);
+  else
+    player->state = IS_DEAD;
+  
+  if ( player->state != IS_DEAD ) {
+    int tmpstate = player->state;
+    player->state = DISCARD_CARD;
     ASSERT( SKILL_RANGE(player->role) );
     if ( SKILL_RANGE(player->role) )
       skills[player->role]( player ); 
+    player->state = tmpstate;
   }
+
+  if ( p2->id >= 0 && p2->id < PLAYERS_NUM )
+    player = &(PLAYERS_LIST[p1->id]);
+  else
+    player->state = IS_DEAD;
+  
+  if ( player->state != IS_DEAD ) {
+    Player *player = &(PLAYERS_LIST[p2->id]);
+    int tmpstate = player->state;
+    player->state = AFTER_GET;
+    ASSERT( SKILL_RANGE(player->role) );
+    if ( SKILL_RANGE(player->role) )
+      skills[player->role]( player ); 
+    player->state = tmpstate;
+  }
+
   return true;
 }
 
@@ -189,27 +207,30 @@ bool takeCard( Card_vector *p1, Card_vector *p2, int index ) {
 void takeAllCards( Player *p1, Player *p2 ) {
   if ( p1 == NULL || p2 == NULL ) return;
   if ( p2->state == IS_DEAD ) return;
-  for ( int i = 0; i < p1->handcard->size; i++ ) {
+  while ( !isEmpty( p1->handcard ) ) {
       Card card = pop_back( p1->handcard );
       if ( card.suit == -1 ) continue;
       card.sticker = card.kind;
       push_back( p2->handcard, card );
   }
-  for ( int i = 0; i < p1->weapon->size; i++ ) {
+  
+  while ( !isEmpty( p1->weapon ) ) {
     Card card = pop_back( p1->weapon );
     if ( card.suit == -1 ) continue;
     UnloadEquip( p1, card.kind );
     card.sticker = card.kind;
     push_back( p2->handcard, card );
   }
-  for ( int i = 0; i < p1->shield->size; i++ ) {
+
+  while ( !isEmpty( p1->shield ) ) {
     Card card = pop_back( p1->shield );
     if ( card.suit == -1 ) continue;
     UnloadEquip( p1, card.kind );
     card.sticker = card.kind;
     push_back( p2->handcard, card );
   }
-  for ( int i = 0; i < p1->distance_item->size; i++ ) {
+
+  while ( !isEmpty( p1->distance_item ) ) {
     Card card = pop_back( p1->distance_item );
     if ( card.suit == -1 ) continue;
     UnloadEquip( p1, card.kind );
@@ -217,15 +238,31 @@ void takeAllCards( Player *p1, Player *p2 ) {
     push_back( p2->handcard, card );
   }
 
-  // assert p1->id == -1 or p1->id == some players.id
-  if ( p1->id >= 0 && p1->id < PLAYERS_NUM  ) {
+
+  
+  /// assert p1->id == -1 or p1->id == some players.id
+  if ( p1->id >= 0 && p1->id < PLAYERS_NUM && p1->state != IS_DEAD ) {
     Player *player = &(PLAYERS_LIST[p1->id]);
-    if ( player->state == IS_DEAD ) return;
-      
+    int tmpstate = player->state;
+    player->state = DISCARD_CARD;
     ASSERT( SKILL_RANGE(player->role) );
     if ( SKILL_RANGE(player->role) )
-      skills[player->role]( player );   
+      skills[player->role]( player ); 
+    player->state = tmpstate;
   }
+
+  // assert p1->id == -1 or p1->id == some players.id
+  if ( p2->id >= 0 && p2->id < PLAYERS_NUM && p2->state != IS_DEAD ) {
+    Player *player = &(PLAYERS_LIST[p2->id]);
+    int tmpstate = player->state;
+    player->state = AFTER_GET;
+    ASSERT( SKILL_RANGE(player->role) );
+    if ( SKILL_RANGE(player->role) )
+      skills[player->role]( player ); 
+    player->state = tmpstate;
+  }
+
+  
 }
 
 // 回傳此種sticker 種類卡牌位置，沒有則回傳-1
@@ -306,8 +343,65 @@ void calcDistance() {
 
 }
 
+// if(抽牌判定) 可以抽兩張挑一張
+Card getJudgementCard( Player *player, int kind ) {
+  Player *tmpPlayer = malloc( sizeof(Player) * 1 );
+  tmpPlayer->handcard = create_vector( 5 );
+  cardHandler( tmpPlayer, 1 );
+  
+  Card c = get_element( tmpPlayer->handcard, 0 );
+  if ( player == NULL || player->role != Lucky_Duke ) {
+    discardCard( tmpPlayer->handcard, 0 );
+    return c;
+  }
+
+  ASSERT( player->role == Lucky_Duke );
+  while ( !isEmpty( player->judgeCards ) ) {
+    printf( "Active Lucky Duke's skill\n" );
+    printf( "You can draw two cards and choose one as your decision\n" );
+    ENTER;
+    Card card = pop_back( player->judgeCards );
+    cardHandler( tmpPlayer, 1 );
+    Card card1 = get_element( tmpPlayer->handcard, 0 );
+    Card card2 = get_element( tmpPlayer->handcard, 1 );
+    discardCard( tmpPlayer->handcard, 0 );
+    discardCard( tmpPlayer->handcard, 1 );
+
+
+    bool judge1 = false, judge2 = false;
+    switch ( kind ){
+      case BARREL:
+        if ( card1.suit == 2 ) judge1 = true;
+        if ( card2.suit == 2 ) judge2 = true;
+      case DYNAMITE:
+        if ( !( card1.suit == 1 && ( card1.number >= 2 && card1.number <= 9 ) ) ) judge1 = true;
+        if ( !( card2.suit == 1 && ( card2.number >= 2 && card2.number <= 9 ) ) ) judge2 = true;
+      case JAIL:
+        if ( card1.suit == 2 ) judge1 = true;
+        if ( card2.suit == 2 ) judge2 = true;
+    }
+    
+    puts( "card1: " );
+    printCard( card1, judge1 ? GREEN : RED );
+    puts( "card2: " );
+    printCard( card2, judge2 ? GREEN : RED );
+  
+    char *str = "Choose the card you want to use as a decision card ( 1 or 2 ): ";
+    int choice = scan(1, 2, str);
+    printf( "You choose the card%d\n", choice );
+    ENTER;
+    return ( choice == 1 ) ? card1 : card2;
+  } 
+  
+  delete_vector( tmpPlayer->handcard );
+  free( tmpPlayer );
+  return c;
+}
+
+
+
 bool judgeFunc( Player *player, int kind ) {
-    Card card = getJudgementCard( player );
+    Card card = getJudgementCard( player, kind );
     printf( "%sJudge card:%s\n", RESET, RESET );
 
     if ( kind == JAIL ) {

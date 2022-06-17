@@ -39,14 +39,17 @@ void printHandCard( Card_vector *cards, int color[], bool visible ) {
     }
 
     puts("");
-    printf( "%-12s", "Sticker" );
-    for (int i = 0; i < cards->size; i++) {
-      Card card = cards->data[i];
-      printf("%s%-12s%s", Color[color[i]], (visible) ? cardKindName[card.sticker] : "*****", Color[0] );
+  
+    int now_player_pos = find_position( cards->id );
+    if ( PLAYERS_LIST[now_player_pos].role == Calamity_Janet ) {
+      printf( "%-12s", "Sticker" );
+      for (int i = 0; i < cards->size; i++) {
+        Card card = cards->data[i];
+        printf("%s%-12s%s", Color[color[i]], (visible) ? cardKindName[card.sticker] : "*****", Color[0] );
+      }
+      puts("");
     }
-
     
-    puts("");
 }
 // 若不指定index,kind,attribute，則填入-1
 // if index == -1 and kind == -1 and attribute == -1, then  all the card will be colored
@@ -64,7 +67,7 @@ int setColor( int **c, int index, int kind, int attribute, Card_vector* cards, i
   if ( index == -1 && kind == -1 && attribute == -1 ) {
     for ( int i = 0; i < cards->size; i++ ) {
       Card tmp = get_element( cards, i );
-      if ( tmp.suit == -1 ) (*c)[i] = 8;
+      if ( tmp.suit == -1  ) (*c)[i] = 8;
       else (*c)[i] = color;
     }
     return cards->size;
@@ -82,7 +85,7 @@ int setColor( int **c, int index, int kind, int attribute, Card_vector* cards, i
       if ( tmp.sticker == kind || tmp.kind == kind ) {
         if ( tmp.suit == -1 ) (*c)[i] = 8;
         else (*c)[i] = color;
-          num++;
+        num++;
       }
     }
   }
@@ -113,7 +116,7 @@ void printUI( Player *nowPlayer )
   }
 
   system("clear");
-  for ( int i = 0; i < PLAYERS_NUM + 1; i++ ) printf( "---------------" );
+  for ( int i = 0; i < PLAYERS_NUM + 2; i++ ) printf( "---------------" );
   puts("");
   // puts("---------------------------------------------------------------------------------------");
   printf( "%s%-15s%s", GRAY_BACK, "ID", RESET );
@@ -200,8 +203,10 @@ void printUI( Player *nowPlayer )
           printf("%s%-18s%s", GRAY, identityName[PLAYERS_LIST[i].identity], RESET);
       else if ( i == indexOfNowPlayer )
           printf("%s%-18s%s", YELLOW, ( i == indexOfNowPlayer ) ? identityName[PLAYERS_LIST[i].identity] : "*****", RESET);
+      else if ( i == indexOfSheriff )
+        printf("%s%-18s%s", RED, identityName[PLAYERS_LIST[i].identity], RESET );
       else
-          printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, ( i == indexOfNowPlayer ) ? identityName[PLAYERS_LIST[i].identity] : "*****", RESET );
+          printf("%s%-18s%s", RESET, ( i == indexOfNowPlayer ) ? identityName[PLAYERS_LIST[i].identity] : "*****", RESET );
   #endif
   }
   puts("");
@@ -229,7 +234,7 @@ void printUI( Player *nowPlayer )
   puts("");
 
   
-  for ( int i = 0; i < PLAYERS_NUM + 1; i++ ) printf( "---------------" );
+  for ( int i = 0; i < PLAYERS_NUM + 2; i++ ) printf( "---------------" );
   puts("");
   // puts("---------------------------------------------------------------------------------------");
   printf( "%-15s", "Weapon" );
@@ -289,7 +294,7 @@ void printUI( Player *nowPlayer )
     puts( "" );
   }
 
-  for ( int i = 0; i < PLAYERS_NUM + 1; i++ ) printf( "---------------" );
+  for ( int i = 0; i < PLAYERS_NUM + 2; i++ ) printf( "---------------" );
   puts("");
   // puts("---------------------------------------------------------------------------------------");
 
