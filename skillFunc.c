@@ -74,7 +74,8 @@ void fWilly_the_Kid( void* this ) {
     Player* player = (Player*)this;
     if( player->state == SET ) {
       
-        player->numOfBang = -1; //無上限
+        player->numOfBang = 0; //無上限
+        player->bangLimit = -1;
   
     }
 };

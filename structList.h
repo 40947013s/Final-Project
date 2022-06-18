@@ -106,4 +106,5 @@ typedef struct _player_list
     RMode   state;    
     Identity identity;
     int numOfBang;
+    int bangLimit;
 } Player;

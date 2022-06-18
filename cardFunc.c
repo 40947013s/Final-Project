@@ -596,7 +596,8 @@ bool Duel( Player *attacker ) {
 bool panic( Player *attacker ){
   if(attacker == NULL) return false;
   Player *choose_player = choosePlayer( attacker, 1 );
-
+  if(choose_player == NULL) return false;
+  
   int choice = 0;
   Card card;
   card.number = -1;
@@ -964,7 +965,7 @@ bool EquipVolcanic( Player *player, int card_position ) {
   }
   player->equipWeapon = VOLCANIC;
 
-  player->numOfBang = -1;
+  player->bangLimit = -1;
   puts( "Equip the Volcanic" );
   ENTER;
   return true;
@@ -973,7 +974,8 @@ bool EquipVolcanic( Player *player, int card_position ) {
 bool UnloadVolcanic( Player *player, Card_vector *cards ) {
   if ( player == NULL ) return false;
   // Willy the Kid 的回合可以用任意張 BANG
-  player->numOfBang = (player->role != Willy_the_Kid) ? 1 : -1;  
+  
+  player->bangLimit = (player->role != Willy_the_Kid) ? 1 : -1; 
 
   printUI( player, "" );
   puts( "Volcanic unloaded" );

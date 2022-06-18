@@ -76,36 +76,37 @@ char *Color[11] = { RESET, RED, YELLOW, GREEN, BLUE, MAG, CYN, WHT, GRAY, GRAY_B
 // State
 char *stateName[12] = { "SET", "JUDGE", "GET_CARD", "AFTER_GET", "PLAY_CARD", "DISCARD_CARD", "MINUS_HP", "FIGHT", "ATTACKED", "FINISH", "DEAD"};
 
-void init_player(Player *i)
+void init_player(Player *player)
 {
-    i->hp = 0;
-    i->hp_limit = 0;
-    i->handcard = create_vector(10);
-    i->handcard->id = i->id;
+    player->hp = 0;
+    player->hp_limit = 0;
+    player->handcard = create_vector(10);
+    player->handcard->id = player->id;
     
-    i->judgeCards = create_vector(5);
-    i->judgeCards->id = i->id;
+    player->judgeCards = create_vector(5);
+    player->judgeCards->id = player->id;
   
-    i->attack_distance = 1;
-    i->attack_power = 1;
+    player->attack_distance = 1;
+    player->attack_power = 1;
     
-    i->equipWeapon = NONE;
-    i->weapon = create_vector(5);
-    i->weapon->id = i->id;
+    player->equipWeapon = NONE;
+    player->weapon = create_vector(5);
+    player->weapon->id = player->id;
     
-    i->equipShield = NONE;    
-    i->shield = create_vector(5);
-    i->shield->id = i->id;
+    player->equipShield = NONE;    
+    player->shield = create_vector(5);
+    player->shield->id = player->id;
     
-    i->equipScope = NONE;
-    i->equipMustang = NONE;
-    i->distance_item = create_vector(5);
-    i->distance_item->id = i->id;
+    player->equipScope = NONE;
+    player->equipMustang = NONE;
+    player->distance_item = create_vector(5);
+    player->distance_item->id = player->id;
     
-    i->role = El_Gringo;
-    i->state = SET;
-    i->identity = Sheriff;
-    i->numOfBang = 1;
+    player->role = El_Gringo;
+    player->state = SET;
+    player->identity = Sheriff;
+    player->numOfBang = 0;
+    player->bangLimit = 1;
 }
 
 int identity_shuffle() {

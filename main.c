@@ -34,8 +34,8 @@ typedef enum _card_kind
  
     
 
-void playerCard( Player *player, int *numOfBang ) {
-  if ( player == NULL || numOfBang == NULL ) return;
+void playerCard( Player *player ) {
+  if ( player == NULL ) return;
   if ( player->state == IS_DEAD ) return;
 
   int *color = NULL;
@@ -51,7 +51,7 @@ void playerCard( Player *player, int *numOfBang ) {
     setColor( &color, -1, MISSED, 0, player->handcard, 3 );
   }
   
-  if ( *numOfBang == 0 && player->numOfBang != -1 ) {
+  if ( player->numOfBang >= player->bangLimit && player->bangLimit != -1 ) {
     setColor( &color, -1, BANG, 0, player->handcard, 0 );
     setColor( &color, -1, MISSED, 0, player->handcard, 0 );
   }
@@ -109,13 +109,13 @@ void playerCard( Player *player, int *numOfBang ) {
               }
               else if ( tmp.attribute == 1 && orangeCards[tmp.kind]( player ) ) {
                 if ( tmp.kind == BANG ) {
-                  if ( *numOfBang != -1 ) (*numOfBang)--;
+                  player->numOfBang++;
                 }
                 discardCard( player->handcard, choice-1 );
               }
               else if ( tmp.attribute == 2 && orangeCards[tmp.sticker]( player ) ) {
                 if ( tmp.sticker == BANG ) {
-                  if ( *numOfBang != -1 ) (*numOfBang)--;
+                  player->numOfBang++;
                 }
                 discardCard( player->handcard, choice-1 );
               }
@@ -299,7 +299,7 @@ int main()
       }
       else if ( p->state == PLAY_CARD )
       {
-          playerCard(p, &numOfBang);
+          playerCard(p);
       }
       else if ( p->state == DISCARD_CARD )
       {
@@ -320,7 +320,7 @@ int main()
           p = &(PLAYERS_LIST[i]);
           TESTCASE
           PLAYERS_LIST[i].state = JUDGE;
-          numOfBang = PLAYERS_LIST[i].numOfBang;
+          PLAYERS_LIST[i].numOfBang = 0;
           // printf( "Player %s starts turn", p->name );
       }
       
