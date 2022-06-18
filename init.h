@@ -14,7 +14,7 @@
 #include "utilityFunc.h"
 #include "globalVar.h"
 #include "UI.h"
-#include "test.h"
+#include "cardFunc.h"
 
 void init_card();
 void game_prepare();

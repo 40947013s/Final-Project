@@ -1,6 +1,6 @@
 #pragma once
 #include "defineList.h"
-#include "test.h"
+#include "cardFunc.h"
 #include "structList.h"
 #include "init.h"
 
