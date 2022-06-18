@@ -330,207 +330,6 @@ void printUI( Player *player, char *msg ) {
   free( color );
 }
 
-/*
-void printUI( Player *nowPlayer ) 
-{
-  int indexOfSheriff = SHERIFF_POSITION;
-  int indexOfNowPlayer = 0;
-  // find the position of the now player
-  for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-      if ( PLAYERS_LIST[i].id == nowPlayer->id ) {
-          indexOfNowPlayer = i;
-          break;
-      }
-  }
-
-  system("clear");
-  for ( int i = 0; i < PLAYERS_NUM + 2; i++ ) printf( "---------------" );
-  puts("");
-  // puts("---------------------------------------------------------------------------------------");
-  printf( "%s%-15s%s", GRAY_BACK, "ID", RESET );
-  for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-      printf( "%s%-18d%s", GRAY_BACK, PLAYERS_LIST[i].id, RESET );
-  }
-  puts("");
-
-  printf( "%-15s", "Name" );
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-      if ( PLAYERS_LIST[i].state == IS_DEAD )
-          printf("%s%-18s%s", GRAY, PLAYERS_LIST[i].name, RESET );
-      else if ( i == indexOfNowPlayer )
-          printf("%s%-18s%s", YELLOW, PLAYERS_LIST[i].name, RESET );
-      else
-          printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].name, RESET );
-  }
-      
-  puts("");
-
-  printf( "%-15s", "HP" );
-  for (int i = 0; i < PLAYERS_NUM; i++){
-      if ( PLAYERS_LIST[i].state == IS_DEAD )
-          printf("%s%-18d%s", GRAY, PLAYERS_LIST[i].hp, RESET);
-      else if ( i == indexOfNowPlayer )
-          printf("%s%-18d%s", YELLOW, PLAYERS_LIST[i].hp, RESET);
-      else
-          printf("%s%-18d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].hp, RESET);
-  }
-  puts("");
-
-  printf( "%-15s", "HandCard" );
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-      if ( PLAYERS_LIST[i].state == IS_DEAD )
-          printf("%s%-18d%s", GRAY, PLAYERS_LIST[i].handcard->size, RESET);
-      else if ( i == indexOfNowPlayer )
-          printf("%s%-18d%s", YELLOW, PLAYERS_LIST[i].handcard->size, RESET);
-      else
-          printf("%s%-18d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].handcard->size, RESET );
-  }
-  puts("");
-
-  printf( "%-15s", "Role" );
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-
-      if ( PLAYERS_LIST[i].state == IS_DEAD )
-          printf("%s%-18s%s", GRAY, roleName[PLAYERS_LIST[i].role], RESET);
-      else if ( i == indexOfNowPlayer )
-          printf("%s%-18s%s", YELLOW, roleName[PLAYERS_LIST[i].role], RESET);
-      else
-          printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, roleName[PLAYERS_LIST[i].role], RESET );
-    
-    
-  }
-      
-  puts("");
-
-  printf( "%-15s", "Distance" );
-  int nowPlayerID = PLAYERS_LIST[indexOfNowPlayer].id;
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-      int id = PLAYERS_LIST[i].id;
-      if ( PLAYERS_LIST[i].state == IS_DEAD )
-          printf("%s%-18d%s", GRAY, DISTANCE[nowPlayerID][id], RESET);
-      else if ( i == indexOfNowPlayer )
-          printf("%s%-18d%s", YELLOW, DISTANCE[nowPlayerID][id], RESET);
-      else
-          printf("%s%-18d%s", ( i == indexOfSheriff ) ? RED : RESET, DISTANCE[nowPlayerID][id], RESET );
-  }
-  puts("");
-
-  printf("%-15s", "Identity");
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-  #ifdef DEBUG
-      if ( PLAYERS_LIST[i].state == IS_DEAD )
-          printf("%s%-18s%s", GRAY, identityName[PLAYERS_LIST[i].identity], RESET);
-      else if ( i == indexOfNowPlayer )
-          printf("%s%-18s%s", YELLOW, identityName[PLAYERS_LIST[i].identity], RESET);
-      else
-          printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, identityName[PLAYERS_LIST[i].identity], RESET );
-  #endif
-
-  #ifndef DEBUG
-      if ( PLAYERS_LIST[i].state == IS_DEAD )
-          printf("%s%-18s%s", GRAY, identityName[PLAYERS_LIST[i].identity], RESET);
-      else if ( i == indexOfNowPlayer )
-          printf("%s%-18s%s", YELLOW, ( i == indexOfNowPlayer ) ? identityName[PLAYERS_LIST[i].identity] : "*****", RESET);
-      else if ( i == indexOfSheriff )
-        printf("%s%-18s%s", RED, identityName[PLAYERS_LIST[i].identity], RESET );
-      else
-          printf("%s%-18s%s", RESET, ( i == indexOfNowPlayer ) ? identityName[PLAYERS_LIST[i].identity] : "*****", RESET );
-  #endif
-  }
-  puts("");
-
-  printf("%-15s", "State");
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-    if ( PLAYERS_LIST[i].state == IS_DEAD )
-      printf("%s%-18s%s", GRAY, stateName[PLAYERS_LIST[i].state], RESET);
-    else if ( i == indexOfNowPlayer )
-      printf("%s%-18s%s", YELLOW, stateName[PLAYERS_LIST[i].state], RESET);
-    else
-      printf("%s%-18s%s", ( i == indexOfSheriff ) ? RED : RESET, stateName[PLAYERS_LIST[i].state], RESET );
-  }
-  puts("");
-
-  printf("%-15s", "Attack");
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-    if ( PLAYERS_LIST[i].state == IS_DEAD )
-      printf("%s%-18d%s", GRAY, PLAYERS_LIST[i].attack_distance, RESET);
-    else if ( i == indexOfNowPlayer )
-      printf("%s%-18d%s", YELLOW, PLAYERS_LIST[i].attack_distance, RESET);
-    else
-      printf("%s%-18d%s", ( i == indexOfSheriff ) ? RED : RESET, PLAYERS_LIST[i].attack_distance, RESET );
-  }
-  puts("");
-
-  
-  for ( int i = 0; i < PLAYERS_NUM + 2; i++ ) printf( "---------------" );
-  puts("");
-  // puts("---------------------------------------------------------------------------------------");
-  printf( "%-15s", "Weapon" );
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-      if ( isEmpty(PLAYERS_LIST[i].weapon) )
-          printf("%s%-18s%s", RESET, "None", RESET );
-      else
-          printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].weapon, 0).kind], RESET );
-
-  }
-  puts("");
-
-  printf( "%-15s", "Shield" );
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-      if ( isEmpty(PLAYERS_LIST[i].shield) )
-          printf("%s%-18s%s", RESET, "None", RESET );
-      else if ( get_element(PLAYERS_LIST[i].shield, 0).suit == -1 && PLAYERS_LIST[i].shield->size == 1 ) 
-        printf("%s%-18s%s", GRAY, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind], RESET );
-      else
-        printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].shield, 0).kind], RESET );
-  }
-  puts("");
-
-  printf( "%-15s", "Scope" );
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-      if ( PLAYERS_LIST[i].equipScope == NONE )
-          printf("%s%-18s%s", RESET, "None", RESET );
-      else
-          printf("%s%-18s%s", YELLOW, cardKindName[PLAYERS_LIST[i].equipScope], RESET );
-  }
-  puts("");
-
-  printf( "%-15s", "Mustang" );
-  for (int i = 0; i < PLAYERS_NUM; i++) {
-      if ( PLAYERS_LIST[i].equipMustang == NONE )
-          printf("%s%-18s%s", RESET, "None", RESET );
-      else
-          printf("%s%-18s%s", YELLOW, cardKindName[PLAYERS_LIST[i].equipMustang], RESET );
-  }
-  puts("");
-
-  
-  bool still_have_card = true;
-  for ( int j = 0; still_have_card; j++ ) {
-    printf( "%-15s", "Judge Card" );
-    still_have_card = false;
-    for (int i = 0; i < PLAYERS_NUM; i++) {
-      if ( j >= PLAYERS_LIST[i].judgeCards->size )
-          printf("%s%-18s%s", RESET, "None", RESET );
-      else {
-        printf("%s%-18s%s", YELLOW, cardKindName[get_element(PLAYERS_LIST[i].judgeCards, j).kind], RESET );
-        if ( j+1 < PLAYERS_LIST[i].judgeCards->size ) still_have_card = true;
-        
-      }
-    
-    }
-    puts( "" );
-  }
-
-  for ( int i = 0; i < PLAYERS_NUM + 2; i++ ) printf( "---------------" );
-  puts("");
-  // puts("---------------------------------------------------------------------------------------");
-
-  printf( "Now turn: %s\t\tDeck number: %d\t\tDiscard Pile number: %d\n", nowPlayer->name, deck->size, discardPile->size );
-
-}
-*/
-
 void print_player(int th)
 {   
     printf("Player %d\n", th+1);
@@ -568,4 +367,41 @@ void printCard( Card card, char *color )
   printf( "%snumber: %d%s\n", color, card.number, RESET );
   printf( "%skind: %s%s\n", color, cardKindName[card.kind], RESET );
   printf( "%sSticker: %s%s\n", color, cardKindName[card.sticker], RESET );
+}
+
+void gameStartUI() {
+    printf("\n");
+    printf("====================================================================================\n");
+    printf("||                                                                                ||\n");
+    printf("||                                                                                ||\n");
+    printf("||                           Welcome to the game Bang!                            ||\n");
+    printf("||                                                                                ||\n");
+    printf("||                                     _____                                      ||\n");
+    printf("||                                   __|   |__                                    ||\n");
+    printf("||                                  |____⍟____|                                   ||\n");
+    printf("||                                   *  | |  *                                    ||\n");
+    printf("||                                    *******                                     ||\n");
+    printf("||                                                                                ||\n");
+    printf("||                                                                                ||\n");
+    printf("||                                                                                ||\n");
+    printf("||    __________          _______      ___               __________      ___      ||\n");
+    printf("||    |         |        |       |     |  |         |   |               |   |     ||\n");
+    printf("||    |         |       |         |    |   |        |   |               |   |     ||\n");
+    printf("||    |==========|     |           |   |    |       |   |               |   |     ||\n");
+    printf("||    |           |    |===========|   |     |      |   |    ========|  |   |     ||\n");
+    printf("||    |           |   |             |  |      |     |   |            |  |   |     ||\n");
+    printf("||    |           |   |             |  |       |    |   |            |   | |      ||\n");
+    printf("||    |___________|   |             |  |        |___|   |____________|  |___|     ||\n");
+    printf("||                                                                                ||\n");
+    printf("||                                                                                ||\n");
+    printf("||                                                                                ||\n");
+    printf("||                        ---------------------------------                       ||\n");
+    printf("||                          Press Enter To Start The Game                         ||\n");
+    printf("||                        ---------------------------------                       ||\n");
+    printf("||                                                                                ||\n");
+    printf("||                                                                                ||\n");
+    printf("====================================================================================\n");
+   
+    while( getchar() != '\n' );
+    system("clear");
 }

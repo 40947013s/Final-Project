@@ -16,6 +16,7 @@
 int main()
 {
   init_card();
+  gameStartUI();
   game_prepare();
 
   int i = SHERIFF_POSITION; //從警長開始
