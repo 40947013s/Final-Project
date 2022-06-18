@@ -12,7 +12,7 @@ void fJourdonnais( void* this ) {
     barrel.suit = -1, barrel.kind = BARREL, barrel.sticker = BARREL;
     if( player->state == SET ) {
       printf( "Active Jourdonnais's skill\n" );
-      printf( "Player %s (Jourdonnais) has a build-in barrel\n", player->name );
+      printf( "You have a build-in barrel\n" );
       ENTER;
       push_back(player->shield, barrel);
     }    
@@ -31,7 +31,7 @@ void fPaul_Regret( void* this ){
         }
       }
     printf( "Active Paul Regret's skill\n" );
-    printf( "Everyone's distance to Player %s (Paul_Regret) +1\n", player->name );
+    printf( "Everyone's distance to you +1\n" );
     ENTER;
   }
 };
@@ -51,8 +51,8 @@ void fRose_Doolan( void* this ){
       }
     }
 
-    printf( "Active Paul_Regret's skill\n" );
-    printf( "Player %s (Rose_Doolan) to everyone's distance -1\n", player->name );
+    printf( "Active Rose_Doolan's skill\n" );
+    printf( "Your distance to everyone's -1\n" );
     ENTER;
     
   }
@@ -305,7 +305,7 @@ void fEl_Gringo( Player *player, Player *attacker, int num, int kind ) {
       num = -num;
       printf( "Active El Gringo's skill\n" );
       printf("Since you are attacked by attacker and lose 1 health,\n" );
-      printf( "you can draw 1 card from the %s's hand\n", attacker->name );
+      printf( "you can draw 1 card from the %s's handcard\n", attacker->name );
       ENTER;
 
       while ( num && !isEmpty( attacker->handcard) ) {

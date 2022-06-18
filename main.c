@@ -35,7 +35,7 @@ void playerCard( Player *player, int *numOfBang ) {
     ENTER;
   }
 
-   if ( player->role == Calamity_Janet ) {
+  if ( player->role == Calamity_Janet ) {
     setColor( &color, -1, MISSED, 0, player->handcard, 3 );
   }
   

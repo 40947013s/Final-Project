@@ -6,13 +6,13 @@ void HPModify( Player* attacker, Player *defender, int n, Kind reason ) {
     defender->state = MINUS_HP;
     skills[defender->role]( defender );
     fEl_Gringo( defender, attacker, n, reason );
-    printf( "Player %s minus %d hp.\n", defender->name, -n );
+    printf( "%s minus %d hp.\n", defender->name, -n );
     ENTER;
     defender->state = tmp;
     defender->hp += n;
   }
   else {
-    printf( "Player %s plus %d hp.\n", defender->name, n );
+    printf( "%s plus %d hp.\n", defender->name, n );
     ENTER;
     defender->hp += n;
   }
@@ -267,7 +267,7 @@ bool Bang( Player *attacker ){
     printf( "No player to attack\n" );
     return false; // 若沒有使用的對象，則不算有使用bang，所以不丟棄那張牌
   }
-  printf( "Player %s is attacked by %s\n", defender->name, attacker->name );
+  printf( "%s is attacked by %s\n", defender->name, attacker->name );
 
   if ( attacker->role == Slab_the_Killer ) {
     printUI( defender );
@@ -300,9 +300,9 @@ bool Bang( Player *attacker ){
 bool Miss( Player *defender, int n ) {
   if ( defender == NULL ) return false;
   
+  printUI( defender );
   for ( int i = 0; i < defender->shield->size; i++ ) {
 
-    printUI( defender );
     printf( "%sJudge barrel%s\n\n", BLUE, RESET );
     bool result = judgeFunc( defender, BARREL );
     if ( result )
@@ -375,28 +375,39 @@ bool Indians( Player *attacker ) {
 
 bool Gatling( Player *attacker ) {
   if ( attacker == NULL ) return false;
-    Player *defender;     
-    printf("Attack all players\n");
-    ENTER;
-    
-    for(int i = 0; i < PLAYERS_NUM; i++) {
-        defender = PLAYERS_LIST + i;   
-        // 如果不是自己
-        if( defender->id != attacker->id && defender->state != IS_DEAD ) {
-          bool miss = Miss( defender, 1 );  
-          printUI( attacker );
-          if ( miss ) {
-              printf( "Player %s avoid attack.\n", defender->name );
-              printf( "Missed attacked!\n" );
-              ENTER;
-          }
-          else {
-              printf( "successful attack!\n" );
-              HPModify( attacker, defender, -1, INDIANS );
-          }
-        }            
+  Player *defender;     
+  printf("Attack all players\n");
+  ENTER;
+
+  int i = defender->id;
+  // find thec next player
+  do{
+    i++;
+    if( i >= PLAYERS_NUM ) i = 0;
+  } while( PLAYERS_LIST[i].state == IS_DEAD && PLAYERS_LIST[i].id != defender->id );
+  
+  do {
+    defender = PLAYERS_LIST + i;
+
+    bool miss = Miss( defender, 1 );  
+    printUI( attacker );
+    if ( miss ) {
+        printf( "%s avoid attack.\n", defender->name );
+        printf( "Missed attacked!\n" );
+        ENTER;
     }
-    return true;
+    else {
+        printf( "successful attack!\n" );
+        HPModify( attacker, defender, -1, INDIANS );
+    }
+
+    do{
+      i++;
+      if( i >= PLAYERS_NUM ) i = 0;
+    } while( PLAYERS_LIST[i].state == IS_DEAD );
+  } while( i != defender->id );
+  
+  return true;
 }
 
 
@@ -423,19 +434,12 @@ bool Wells( Player *player ) {
 bool Store( Player *player ) {
     if ( player == NULL ) return false;
     Player tmpPlayer, *p;
-    int start = -1;
+  
     tmpPlayer.handcard = create_vector(10);
     tmpPlayer.state = IS_DEAD;
-    for(int i = 0; i < PLAYERS_NUM; i++) {
-        p = PLAYERS_LIST + i;
-        if( p->id == player->id && p->state != IS_DEAD ) {
-            start = i;
-            break;
-        }
-    }
-
+  
     cardHandler( &tmpPlayer, ALIVE_NUM );
-    int i = start;
+    int i = player->id;
     do {
         p = PLAYERS_LIST + i;
         bool get_card = false;
@@ -451,7 +455,7 @@ bool Store( Player *player ) {
           if ( i == PLAYERS_NUM ) i = 0;
         } while ( PLAYERS_LIST[i].state == IS_DEAD );
         
-    } while ( i != start );
+    } while ( i != player->id );
     return true;
 }
 
@@ -1032,16 +1036,14 @@ bool EquipDynamite( Player *player, int index ) {
 bool EquipJail( Player *player , int index ) {
   Player *choose_player;
   
-  while ( 1 ) {
-
-    choose_player = choosePlayer( player, -1 );
-    
-    if ( choose_player->identity == Sheriff ) {
-      printf( "You can't use jail on the Sheriff\n" );
-      ENTER;
-      return false;
-    }
+  choose_player = choosePlayer( player, -1 );
+  
+  if ( choose_player->identity == Sheriff ) {
+    printf( "You can't use jail on the Sheriff\n" );
+    ENTER;
+    return false;
   }
+  
   
   takeCard( player->handcard, choose_player->judgeCards, index );   
   printUI( player );
