@@ -54,7 +54,7 @@ char *identityName[] = { "Sheriff", "Deputies", "Outlaws", "Renegade" };
 char *roleName[] = {
     "Bart_Cassidy", "Black_Jack", "Calamity_Janet", "El_Gringo", 
     "Jesse_Jones", "Jourdonnais", "Kit_Carlson", "Lucky_Duke",
-    "Paul_Regret", "Pedro Ramirez", "Rose Doolan", "Sid_Ketchum",
+    "Paul_Regret", "Pedro Ramirez", "Rose_Doolan", "Sid_Ketchum",
     "Slab_the_Killer", "Suzy_Lafayette", "Vulture_Sam", "Willy_the_Kid"
 };
 
@@ -157,7 +157,7 @@ void role_shuffle() {
         strcat( str, " role_skill.txt | awk '{print $2}' > k.txt" );
         
         system( str );
-        pFile = pFile = fopen( "k.txt", "r" );
+        pFile = fopen( "k.txt", "r" );
         assert( pFile != NULL );
         fgets( str, 1000, pFile );
         printf( "%sRole2: %s%s\n\n", BLUE, roleName[k], RESET );
@@ -182,13 +182,45 @@ void role_shuffle() {
         }
     }
     
-  #ifdef DEBUG 
-    PLAYERS_LIST[0].role = Vulture_Sam;
-    PLAYERS_LIST[1].role = Lucky_Duke;
-    PLAYERS_LIST[2].role = Sid_Ketchum;
-    PLAYERS_LIST[3].role = Rose_Doolan;
-    PLAYERS_LIST[3].hp = 2, PLAYERS_LIST[3].hp_limit = 2;
-  #endif
+
+// typedef enum _role_kind
+// {
+//     Bart_Cassidy, Black_Jack, Calamity_Janet, El_Gringo,
+//     Jesse_Jones, Jourdonnais, Kit_Carlson, Lucky_Duke,
+//     Paul_Regret, Pedro_Ramirez, Rose_Doolan, Sid_Ketchum,
+//     Slab_the_Killer, Suzy_Lafayette, Vulture_Sam, Willy_the_Kid
+// } Role;
+
+
+//   #ifdef DEBUG 
+    
+
+    // PLAYERS_LIST[0].role = Paul_Regret;
+    // PLAYERS_LIST[1].role = Pedro_Ramirez;
+    // PLAYERS_LIST[2].role = Rose_Doolan;
+    // PLAYERS_LIST[3].role = Sid_Ketchum;
+    // PLAYERS_LIST[4].role = Slab_the_Killer;
+    // PLAYERS_LIST[5].role = Suzy_Lafayette;
+    // PLAYERS_LIST[6].role = Willy_the_Kid;
+
+    // Card c; 
+    // c.kind = MUSTANG; 
+    // c.sticker = MUSTANG; 
+    // c.number = 2; 
+    // c.suit = 2; 
+    // c.attribute = 1; 
+    // c.is_orange = false; 
+
+    // push_back( PLAYERS_LIST[0].handcard, c ); 
+    // push_back( PLAYERS_LIST[1].handcard, c ); 
+    // push_back( PLAYERS_LIST[2].handcard, c ); 
+    // push_back( PLAYERS_LIST[3].handcard, c ); 
+    // push_back( PLAYERS_LIST[4].handcard, c ); 
+    // push_back( PLAYERS_LIST[5].handcard, c ); 
+    // push_back( PLAYERS_LIST[6].handcard, c ); 
+
+    
+//   #endif
 }
 
 void game_prepare()

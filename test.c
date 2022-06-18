@@ -105,6 +105,8 @@ void IsGameOver( Player *killer, Player *player ){
     if ( GAME_STATE == END ) {
       puts( "Game Over" );
       ENTER;
+      #define DEBUG
+      printUI( player );
       exit(0);
       // return;
     }
@@ -710,7 +712,7 @@ bool EquipMustang( Player *player, int card_position ){
     }
   }
  
-  player->distance_item = create_vector(1);
+  // player->distance_item = create_vector(1);
   // handcard 給 distance_item 
   takeCard( player->handcard, player->distance_item, card_position );
   
@@ -979,6 +981,7 @@ bool UnloadRev( Player *player, Card_vector *cards ){
   ENTER;
   return true;
 }
+
 //射擊距離變成5
 bool EquipWinchester( Player *player, int card_position ){
   bool is_equip = EquipWeapon( player, card_position );
@@ -1034,23 +1037,6 @@ bool EquipBarrel( Player *player, int index ) {
     ENTER;
     return true;
 }
-
-// bool JudgeBarrel( Player *player ) {
-//   bool result = false;
-  
-//   for ( int i = 0; i < player->judgeCards->size; i++ ) {
-//     printUI( player );
-//     printf( "%sJudge barrel%s\n", BLUE, RESET );
-//     result = judgeFunc( player, BARREL );
-//     if ( result )
-//       printf( "%sJudgment successful%s\n", GREEN, RESET );
-//     else
-//       printf( "%sJudgment failed%s\n", RED, RESET );
-//     ENTER;
-//     if ( result ) return true;
-//   }
-//   return result;
-// }
 
 
 bool UnloadBarrel( Player *player ) {

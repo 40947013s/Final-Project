@@ -192,7 +192,7 @@ void fPedro_Ramirez( void* this ) {
       if( !isEmpty(discardPile) ) {
         printf( "Active Pedro Ramirez's skill\n" );
         puts( "You can get first from deck or discard pile" );
-        puts( "Enter your where to get card ( 0 : discard, 1 : deck ) :" );
+        puts( "Enter where you want to get card ( 0 : discard, 1 : deck ) :" );
         
         int choice = scan(0, 1, "");
         if(choice == 1) cardHandler( player, 1 );

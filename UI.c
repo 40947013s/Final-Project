@@ -103,6 +103,51 @@ int setColor( int **c, int index, int kind, int attribute, Card_vector* cards, i
   return num;
 }
 
+void setPlayerColor( int **c, int limit_distance, Player *player, int color, bool is_default ) {
+  if ( player == NULL  ) return;
+  
+  int num = 0;
+  if ( *c == NULL ) {
+    *c = (int*)calloc( PLAYERS_NUM, sizeof(int));
+    memset( *c, 0, PLAYERS_NUM * sizeof(int) );
+  }
+
+  (*c)[SHERIFF_POSITION] = 1;
+  for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+    Player *p = PLAYERS_LIST + i;
+    if ( p->state == IS_DEAD )
+      (*c)[i] = 8;
+    else if ( p->id == player->id ) 
+      (*c)[i] = 2;
+  }
+  
+  if ( is_default ) return;
+
+
+  if ( limit_distance == -1 ) {
+    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+      Player *p = PLAYERS_LIST + i;
+      if ( p->state == IS_DEAD || p->id == player->id )
+        continue;
+      else
+        (*c)[i] = color;
+    }
+    return;
+  }
+
+  for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+    Player *p = PLAYERS_LIST + i;
+    int distance = DISTANCE[player->id][p->id];
+    if ( p->state == IS_DEAD || p->id == player->id )
+      continue;
+    else if ( distance <= limit_distance )
+      (*c)[i] = color;  
+  }
+
+
+
+}
+
 void printUI( Player *nowPlayer ) 
 {
   int indexOfSheriff = SHERIFF_POSITION;

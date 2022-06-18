@@ -170,13 +170,11 @@ bool takeCard( Card_vector *p1, Card_vector *p2, int index ) {
   push_back( p2, card );
 
   /// assert p1->id == -1 or p1->id == some players.id
-  Player *player;
+  Player *player = NULL;
   if ( p1->id >= 0 && p1->id < PLAYERS_NUM )
     player = &(PLAYERS_LIST[p1->id]);
-  else
-    player->state = IS_DEAD;
   
-  if ( player->state != IS_DEAD ) {
+  if ( player != NULL && player->state != IS_DEAD ) {
     int tmpstate = player->state;
     player->state = DISCARD_CARD;
     ASSERT( SKILL_RANGE(player->role) );
@@ -187,10 +185,8 @@ bool takeCard( Card_vector *p1, Card_vector *p2, int index ) {
 
   if ( p2->id >= 0 && p2->id < PLAYERS_NUM )
     player = &(PLAYERS_LIST[p1->id]);
-  else
-    player->state = IS_DEAD;
   
-  if ( player->state != IS_DEAD ) {
+  if ( player != NULL && player->state != IS_DEAD ) {
     Player *player = &(PLAYERS_LIST[p2->id]);
     int tmpstate = player->state;
     player->state = AFTER_GET;

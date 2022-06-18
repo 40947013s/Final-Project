@@ -1,0 +1,11 @@
+{
+    "makefile.extensionOutputFolder": "./.vscode",
+    "files.associations": {
+        "test.h": "c"
+    },
+    "code-runner.executorMap": {
+    
+        "c": "cd $dir && make clean && make && clear && ./main"
+    },
+
+}

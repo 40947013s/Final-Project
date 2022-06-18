@@ -3,8 +3,8 @@
 
 #define TESTCASE \
     // Card c; \
-    // c.kind = DYNAMITE; \
-    // c.sticker = DYNAMITE; \
+    // c.kind = MUSTANG; \
+    // c.sticker = MUSTANG; \
     // c.number = 2; \
     // c.suit = 2; \
     // c.attribute = 1; \
@@ -69,7 +69,7 @@ void playerCard( Player *player, int *numOfBang ) {
   char input[100] = {0};
   bool warn = false;
   while ( 1 ) {
-      system("clear");
+      
       printUI( player );
       if ( warn )
         puts("You can't play this card");
@@ -82,46 +82,46 @@ void playerCard( Player *player, int *numOfBang ) {
         return;
       }
       else if ( color[choice-1] == 3 ) {
-      color[choice-1] = 1;
-      printUI( player );
-      printHandCard( player->handcard, color, true);
-      Card tmp = get_element( player->handcard, choice-1 );
-      printf( "Are you sure you want to use the card? (Y/n) " );
-      fgets(input, 100, stdin);
-      if (( input[0] == 'Y' || input[0] == 'y' || input[0] == '\n' ) && tmp.sticker != NONE ) {
-          warn = false;
-          if ( tmp.is_orange ) {
-            if ( tmp.sticker == BEER && Beer( player, NULL ) ) {
-              Card c = get_element( player->handcard, choice-1 );
-              discardCard( player->handcard, choice-1 );
-            }
-            else if ( tmp.attribute == 1 && orangeCards[tmp.kind]( player ) ) {
-              if ( tmp.kind == BANG ) {
-                if ( *numOfBang != -1 ) (*numOfBang)--;
+        color[choice-1] = 1;
+        printUI( player );
+        printHandCard( player->handcard, color, true);
+        Card tmp = get_element( player->handcard, choice-1 );
+        printf( "Are you sure you want to use the card? (Y/n) " );
+        fgets(input, 100, stdin);
+        if (( input[0] == 'Y' || input[0] == 'y' || input[0] == '\n' ) && tmp.sticker != NONE ) {
+            warn = false;
+            if ( tmp.is_orange ) {
+              if ( tmp.sticker == BEER && Beer( player, NULL ) ) {
+                Card c = get_element( player->handcard, choice-1 );
+                discardCard( player->handcard, choice-1 );
               }
-              discardCard( player->handcard, choice-1 );
-            }
-            else if ( tmp.attribute == 2 && orangeCards[tmp.sticker]( player ) ) {
-              if ( tmp.sticker == BANG ) {
-                if ( *numOfBang != -1 ) (*numOfBang)--;
+              else if ( tmp.attribute == 1 && orangeCards[tmp.kind]( player ) ) {
+                if ( tmp.kind == BANG ) {
+                  if ( *numOfBang != -1 ) (*numOfBang)--;
+                }
+                discardCard( player->handcard, choice-1 );
               }
-              discardCard( player->handcard, choice-1 );
+              else if ( tmp.attribute == 2 && orangeCards[tmp.sticker]( player ) ) {
+                if ( tmp.sticker == BANG ) {
+                  if ( *numOfBang != -1 ) (*numOfBang)--;
+                }
+                discardCard( player->handcard, choice-1 );
+              }
             }
+            else {
+              blueCards[tmp.kind]( player, choice-1 );
+            }
+            break;
           }
           else {
-            blueCards[tmp.kind]( player, choice-1 );
-          }
-          break;
+            warn = false;
+            color[choice-1] = 3;
+            continue;
+          } 
         }
         else {
-          warn = false;
-          color[choice-1] = 3;
+          warn = true;
           continue;
-        } 
-      }
-      else {
-        warn = true;
-        continue;
       }
   }
   free( str );
@@ -305,6 +305,7 @@ int main()
           } while ( PLAYERS_LIST[i].state == IS_DEAD );
           
           p = &(PLAYERS_LIST[i]);
+          TESTCASE
           PLAYERS_LIST[i].state = JUDGE;
           numOfBang = PLAYERS_LIST[i].numOfBang;
           // printf( "Player %s starts turn", p->name );
