@@ -159,11 +159,13 @@ void fKit_Carlson( void* this ) {
       cardHandler( tmpPlayer, 3 );
       printf( "Active Kit Carlson's skill\n" );
       puts( "You can get 3 of 2 cards from deck" );
-      
+      ENTER;
+
       int n = 2;
       Card card;
     
       while ( n ) {
+        
         card = chooseCard( player, tmpPlayer->handcard, -1, player->handcard, false, true );
         if ( card.number != -1 ) n--;
         else puts( "You need to take card!" );

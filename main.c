@@ -1,15 +1,27 @@
 #include "init.h"
 #include <assert.h>
 
+
+/*
+typedef enum _card_kind        
+{
+    BANG, MISSED, GATLING, INDIANS, PANIC, 
+    CAT, STAGECOACH, WELLS, STORE, BEER, 
+    SALOOW, DUEL, BARREL, SCOPE, MUSTANG, 
+    JAIL, DYNAMITE, VOLCANIC, SCHOFIELD, 
+    REMINGTON, REV, WINCHEDTER, NONE
+} Kind;
+*/
+
 #define TESTCASE \
-    // Card c; \
-    // c.kind = MUSTANG; \
-    // c.sticker = MUSTANG; \
-    // c.number = 2; \
-    // c.suit = 2; \
-    // c.attribute = 1; \
-    // c.is_orange = false; \
-    // push_back( p->handcard, c ); \
+    Card c; \
+    c.kind = GATLING; \
+    c.sticker = GATLING; \
+    c.number = 2; \
+    c.suit = 2; \
+    c.attribute = 1; \
+    c.is_orange = true; \
+    push_back( p->handcard, c ); \
     // push_back( p->handcard, c ); \
     // c.kind = JAIL; \
     // c.sticker = JAIL; \

@@ -350,26 +350,40 @@ bool Miss( Player *defender, int n ) {
 
 // 所有玩家棄一張bang，沒有棄的扣一滴血
 bool Indians( Player *attacker ) {
-    if ( attacker == NULL ) return false;
-    Player *p;     
-    printf("All the others in the game except you have to discard a BANG.\n");
-    printf("Or minus 1 hp.\n");
-    for(int i = 0; i < PLAYERS_NUM; i++) {
-        p = PLAYERS_LIST + i;  
-        // 如果不是自己        
-        if( p->id != attacker->id && p->state != IS_DEAD ) {
-            // 其他人的對應            
-            bool is_discard_bang = chooseCard( p, p->handcard, BANG, false, false, true ).number > 0 ? true : false;
-            printUI( p );
-            if ( is_discard_bang ) {
-                printf( "Player %s discard a BANG.\n", p->name );
-                ENTER;
-            }
-            else {
-                HPModify( attacker, p, -1, INDIANS );
-            }
-        }            
+  if ( attacker == NULL ) return false;
+  Player *p;     
+  printf("All the others in the game except you have to discard a BANG.\n");
+  printf("Or minus 1 hp.\n");
+  ENTER;
+  int i = attacker->id;
+  
+  // find thec next player
+  do{
+    i++;
+    if( i >= PLAYERS_NUM ) i = 0;
+  } while( PLAYERS_LIST[i].state == IS_DEAD && PLAYERS_LIST[i].id != attacker->id );
+  
+  do {
+    p = PLAYERS_LIST + i;
+
+    bool is_discard_bang = chooseCard( p, p->handcard, BANG, false, false, true ).number > 0 ? true : false; 
+    printUI( attacker );
+    if ( is_discard_bang ) {
+        printf( "%s discard a BANG.\n", p->name );
+        ENTER;
     }
+    else {
+      printf( "successful attack!\n" );
+      HPModify( p, p, -1, INDIANS );
+      printUI( attacker );
+    }
+
+    do{
+      i++;
+      if( i >= PLAYERS_NUM ) i = 0;
+    } while( PLAYERS_LIST[i].state == IS_DEAD );
+  } while( i != attacker->id );
+  
   return true;
 }
 
@@ -379,7 +393,7 @@ bool Gatling( Player *attacker ) {
   printf("Attack all players\n");
   ENTER;
 
-  int i = defender->id;
+  int i = attacker->id;
   // find thec next player
   do{
     i++;
@@ -399,13 +413,14 @@ bool Gatling( Player *attacker ) {
     else {
         printf( "successful attack!\n" );
         HPModify( attacker, defender, -1, INDIANS );
+        printUI( attacker );
     }
 
     do{
       i++;
       if( i >= PLAYERS_NUM ) i = 0;
     } while( PLAYERS_LIST[i].state == IS_DEAD );
-  } while( i != defender->id );
+  } while( i != attacker->id );
   
   return true;
 }
