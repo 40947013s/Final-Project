@@ -196,23 +196,32 @@ void role_shuffle() {
 //   #ifdef DEBUG 
     
 
-    // PLAYERS_LIST[0].role = Paul_Regret;
-    // PLAYERS_LIST[1].role = Pedro_Ramirez;
+    PLAYERS_LIST[0].role = Lucky_Duke;
+    // PLAYERS_LIST[2].role = Pedro_Ramirez;
     // PLAYERS_LIST[2].role = Rose_Doolan;
     // PLAYERS_LIST[3].role = Sid_Ketchum;
     // PLAYERS_LIST[4].role = Slab_the_Killer;
     // PLAYERS_LIST[5].role = Suzy_Lafayette;
     // PLAYERS_LIST[6].role = Willy_the_Kid;
 
-    // Card c; 
-    // c.kind = MUSTANG; 
-    // c.sticker = MUSTANG; 
-    // c.number = 2; 
-    // c.suit = 2; 
-    // c.attribute = 1; 
-    // c.is_orange = false; 
+    Card c; 
+    c.kind = DYNAMITE; 
+    c.sticker = DYNAMITE; 
+    c.number = 2; 
+    c.suit = 2; 
+    c.attribute = 1; 
+    c.is_orange = false; 
 
-    // push_back( PLAYERS_LIST[0].handcard, c ); 
+    push_back( PLAYERS_LIST[0].judgeCards, c ); 
+
+    c.kind = JAIL; 
+    c.sticker = JAIL; 
+    c.number = 2; 
+    c.suit = 2; 
+    c.attribute = 1; 
+    c.is_orange = false; 
+    push_back( PLAYERS_LIST[0].judgeCards, c ); 
+
     // push_back( PLAYERS_LIST[1].handcard, c ); 
     // push_back( PLAYERS_LIST[2].handcard, c ); 
     // push_back( PLAYERS_LIST[3].handcard, c ); 

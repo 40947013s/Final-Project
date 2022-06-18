@@ -14,14 +14,14 @@ typedef enum _card_kind
 */
 
 #define TESTCASE \
-    // Card c; \
-    // c.kind = GATLING; \
-    // c.sticker = GATLING; \
-    // c.number = 2; \
-    // c.suit = 2; \
-    // c.attribute = 1; \
-    // c.is_orange = true; \
-    // push_back( p->handcard, c ); \
+    Card c; \
+    c.kind = GATLING; \
+    c.sticker = GATLING; \
+    c.number = 2; \
+    c.suit = 2; \
+    c.attribute = 1; \
+    c.is_orange = true; \
+    push_back( p->handcard, c ); \
     // push_back( p->handcard, c ); \
     // c.kind = JAIL; \
     // c.sticker = JAIL; \

@@ -352,6 +352,9 @@ Card getJudgementCard( Player *player, int kind ) {
   Card c = get_element( tmpPlayer->handcard, 0 );
   if ( player == NULL || player->role != Lucky_Duke ) {
     discardCard( tmpPlayer->handcard, 0 );
+    
+    delete_vector( tmpPlayer->handcard );
+    free( tmpPlayer );
     return c;
   }
 
@@ -360,7 +363,7 @@ Card getJudgementCard( Player *player, int kind ) {
     printf( "Active Lucky Duke's skill\n" );
     printf( "You can draw two cards and choose one as your decision\n" );
     ENTER;
-    Card card = pop_back( player->judgeCards );
+    // Card card = pop_back( player->judgeCards );
     cardHandler( tmpPlayer, 1 );
     Card card1 = get_element( tmpPlayer->handcard, 0 );
     Card card2 = get_element( tmpPlayer->handcard, 1 );
@@ -392,7 +395,9 @@ Card getJudgementCard( Player *player, int kind ) {
     char *str = "Choose the card you want to use as a decision card ( 1 or 2 ): ";
     int choice = scan(1, 2, str);
     printf( "You choose the card%d\n", choice );
-    ENTER;
+
+    delete_vector( tmpPlayer->handcard );
+    free( tmpPlayer );
     return ( choice == 1 ) ? card1 : card2;
   } 
   
