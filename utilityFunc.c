@@ -341,6 +341,7 @@ void calcDistance() {
 
 // if(抽牌判定) 可以抽兩張挑一張
 Card getJudgementCard( Player *player, int kind ) {
+  
   Player *tmpPlayer = malloc( sizeof(Player) * 1 );
   tmpPlayer->handcard = create_vector( 5 );
   cardHandler( tmpPlayer, 1 );
@@ -369,12 +370,15 @@ Card getJudgementCard( Player *player, int kind ) {
       case BARREL:
         if ( card1.suit == 2 ) judge1 = true;
         if ( card2.suit == 2 ) judge2 = true;
+        break;
       case DYNAMITE:
         if ( !( card1.suit == 1 && ( card1.number >= 2 && card1.number <= 9 ) ) ) judge1 = true;
         if ( !( card2.suit == 1 && ( card2.number >= 2 && card2.number <= 9 ) ) ) judge2 = true;
+        break;
       case JAIL:
         if ( card1.suit == 2 ) judge1 = true;
         if ( card2.suit == 2 ) judge2 = true;
+        break;
     }
     
     puts( "card1: " );
