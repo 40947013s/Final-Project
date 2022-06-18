@@ -106,7 +106,7 @@ void IsGameOver( Player *killer, Player *player ){
     if ( GAME_STATE == END ) {
       // puts( "Game Over" );
       // ENTER;
-      #define DEBUG
+      // #define DEBUG
       printUI( player, "Game Over" );
       exit(0);
       // return;
@@ -166,7 +166,7 @@ Player *choosePlayer( Player *attacker, int limitDistance ) {
     else
       printUI2( attacker, color, "Which player to attack\n" );
 
-    int choice = scan( 1, num, "Choose a player: " );
+    int choice = scan( 1, PLAYERS_NUM, "Choose a player: " );
   
     char input[100] = {0};
     
@@ -201,35 +201,6 @@ Player *choosePlayer( Player *attacker, int limitDistance ) {
   free( color );
   return NULL;
   
-  Player *p = NULL; 
-  if( limitDistance == -1 ) limitDistance = 20; //開無限
-  int *ID = malloc(PLAYERS_NUM), id_count = 0;
-  printf("Which player to attack: \n");
-  printf("Choice   Name    ID\n");
-  for(int i = 0; i < PLAYERS_NUM; i++) {
-      p = PLAYERS_LIST + i;    
-      if ( p->state == IS_DEAD ) continue;
-      int distance = DISTANCE[attacker->id][p->id];
-      if( p->id != attacker->id && distance <= limitDistance ) {
-          printf("[%d] %10s %7d \n", id_count, p->name, p->id);
-          ID[id_count++] = p->id;
-      }            
-  }
-
-  if ( id_count <= 0 ) {
-      printf("There isn't any players to be chosen.\n");
-      return NULL;
-  } // 沒有可以使用的對象
-
-  int choice = scan(0, id_count-1, "--> ");
-  for(int i = 0; i < PLAYERS_NUM; i++) {
-      p = PLAYERS_LIST + i;           
-      if( p->id == ID[choice] ) {
-          break;
-      }            
-  }
-  free(ID);
-  return p;
 } 
 
 // if kind == -1, then all the card can be chosen

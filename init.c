@@ -241,7 +241,7 @@ void game_prepare()
         printf( "Input the name of player %d : ", i+1 );
         fgets( players, 1000, stdin );
         if( strcmp( players, "\n") == 0 ) {
-            sprintf( players, "Player %d", i );
+            sprintf( players, "Player %d", i+1 );
         }
         clean_buffer(players);
         strcpy(PLAYERS_LIST[i].name, players);

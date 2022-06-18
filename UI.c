@@ -112,7 +112,7 @@ int setPlayerColor( int **c, int limit_distance, Player *player, int color, bool
     memset( *c, 0, PLAYERS_NUM * sizeof(int) );
   }
 
-  (*c)[SHERIFF_POSITION] = 1;
+  (*c)[SHERIFF_POSITION] = 4;
   for ( int i = 0; i < PLAYERS_NUM; i++ ) {
     Player *p = PLAYERS_LIST + i;
     if ( p->state == IS_DEAD )
@@ -213,9 +213,12 @@ void printUI2( Player *nowPlayer, int *color, char *msg )
   #ifndef DEBUG
     if ( PLAYERS_LIST[i].state == IS_DEAD || GAME_STATE == END )
       printf("%s%-18s%s", Color[color[i]], identityName[PLAYERS_LIST[i].identity], RESET);
+    else if ( PLAYERS_LIST[i].identity == Sheriff || i == nowPlayer->id )
+      printf("%s%-18s%s", Color[color[i]], identityName[PLAYERS_LIST[i].identity], RESET );
     else
-      printf("%s%-18s%s", Color[color[i]], ( i == nowPlayer->id ) ? identityName[PLAYERS_LIST[i].identity] : "*****", RESET );
+      printf("%s%-18s%s", Color[color[i]], "*****", RESET );
   #endif
+
   }
   puts("");
 
