@@ -1,5 +1,10 @@
 #include "UI.h"
 
+/**@brief 打印手牌
+ * @param cards 手牌
+ * @param color 手牌顏色
+ * @param visible 是否顯示手牌
+ */
 void printHandCard( Card_vector *cards, int color[], bool visible ) {
     if ( isEmpty( cards ) ) {
         printf("There is no card\n");
@@ -51,6 +56,7 @@ void printHandCard( Card_vector *cards, int color[], bool visible ) {
     }
     
 }
+
 // 若不指定index,kind,attribute，則填入-1
 // if index == -1 and kind == -1 and attribute == -1, then  all the card will be colored
 int setColor( int **c, int index, int kind, int attribute, Card_vector* cards, int color ) {
@@ -103,13 +109,25 @@ int setColor( int **c, int index, int kind, int attribute, Card_vector* cards, i
   return num;
 }
 
-int setPlayerColor( int **c, int limit_distance, Player *player, int color, bool is_default ) {
+/**@brief 
+ * @param 
+ * 
+ * @param index if index != -1, then color the card at index with color
+ */
+
+int setPlayerColor( int **c, int limit_distance, Player *player, int index, int color, bool is_default ) {
   if ( player == NULL  ) return 0;
   
   int num = 0;
   if ( *c == NULL ) {
     *c = (int*)calloc( PLAYERS_NUM, sizeof(int));
     memset( *c, 0, PLAYERS_NUM * sizeof(int) );
+  }
+
+  if ( index != -1 ) {
+    ASSERT( index >= 0 && index < PLAYERS_NUM );
+    (*c)[index] = color;
+    return 1;
   }
 
   (*c)[SHERIFF_POSITION] = 4;
@@ -307,7 +325,7 @@ void printUI2( Player *nowPlayer, int *color, char *msg )
 
 void printUI( Player *player, char *msg ) {
   int *color = NULL;
-  setPlayerColor( &color, -1, player, 0, true );
+  setPlayerColor( &color, -1, player, -1, 0, true );
   printUI2( player, color, msg );
   free( color );
 }

@@ -100,7 +100,7 @@ void fJesse_Jones( void* this ){
         else
         {
   
-          Player *target = choosePlayer( player, -1 );
+          Player *target = choosePlayer( player, -1, NULL );
           if ( chooseCard( player, target->handcard, -1, player->handcard, false, false ).number == -1 )
             continue;
           cardHandler( player, 1 );

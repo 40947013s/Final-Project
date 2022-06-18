@@ -146,17 +146,19 @@ void IsGameOver( Player *killer, Player *player ){
 
 // 選擇攻擊對象
 // if limitDistance == -1 then 沒有距離限制
-Player *choosePlayer( Player *attacker, int limitDistance ) {
+Player *choosePlayer( Player *attacker, int limitDistance, int *color ) {
   if ( attacker == NULL ) return NULL;
   
-  int *color = NULL;
-  int num = setPlayerColor( &color, limitDistance, attacker, 3, false );
-  if ( num == 0 ) {
-    puts( "You can't attack anyone" );
-    ENTER;
-    return NULL;
+  if ( color == NULL ) {
+    // int *color = NULL;
+    int num = setPlayerColor( &color, limitDistance, attacker, -1, 3, false );
+    if ( num == 0 ) {
+      puts( "You can't attack anyone" );
+      ENTER;
+      return NULL;
+    }
   }
-
+ 
 
   bool warn = false;
   while ( 1 ) {
@@ -294,7 +296,7 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
 bool Bang( Player *attacker ){
   if ( attacker == NULL ) return false;
   int limitDistance = attacker->attack_distance;
-  Player *defender = choosePlayer( attacker, limitDistance );
+  Player *defender = choosePlayer( attacker, limitDistance, NULL );
   if ( defender == NULL ) {
     printf( "No player to attack\n" );
     return false; // 若沒有使用的對象，則不算有使用bang，所以不丟棄那張牌
@@ -551,7 +553,7 @@ bool Saloow( Player *player ){
 // 出不了BANG的一方扣血
 // dueler first
 bool Duel( Player *attacker ) {
-    Player *dueler = choosePlayer( attacker, -1 );
+    Player *dueler = choosePlayer( attacker, -1, NULL );
     Player *player, *winner;
     int turn = 2; // 1: attacker, 2: dueler
     bool is_discard_bang = false;
@@ -595,7 +597,7 @@ bool Duel( Player *attacker ) {
 // 除了監獄 ---> done
 bool panic( Player *attacker ){
   if(attacker == NULL) return false;
-  Player *choose_player = choosePlayer( attacker, 1 );
+  Player *choose_player = choosePlayer( attacker, 1, NULL );
   if(choose_player == NULL) return false;
   
   int choice = 0;
@@ -644,7 +646,7 @@ bool panic( Player *attacker ){
 bool cat( Player *attacker ) {
     
   if(attacker == NULL) return false;
-  Player *choose_player = choosePlayer( attacker, -1 );
+  Player *choose_player = choosePlayer( attacker, -1, NULL );
   bool is_choose = false;
 
   int all_size =  choose_player->handcard->size + choose_player->weapon->size;
@@ -974,7 +976,7 @@ bool EquipVolcanic( Player *player, int card_position ) {
 bool UnloadVolcanic( Player *player, Card_vector *cards ) {
   if ( player == NULL ) return false;
   // Willy the Kid 的回合可以用任意張 BANG
-  
+
   player->bangLimit = (player->role != Willy_the_Kid) ? 1 : -1; 
 
   printUI( player, "" );
@@ -1083,15 +1085,44 @@ bool EquipDynamite( Player *player, int index ) {
 }
 
 bool EquipJail( Player *player , int index ) {
+  if ( player == NULL ) return false;
   Player *choose_player;
   
-  choose_player = choosePlayer( player, -1 );
+  int *color = NULL;
+  int num = setPlayerColor( &color, -1, player, -1, 3, false );
+  int tmp = setPlayerColor( &color, -1, player, SHERIFF_POSITION, 4, false );
+  num -= tmp;
   
-  if ( choose_player->identity == Sheriff ) {
-    printf( "You can't use jail on the Sheriff\n" );
+  for ( int i = 0; i < PLAYERS_NUM && num > 0; i++ ) {
+    Player *p = PLAYERS_LIST + i;
+    if ( p->id == player->id ) continue;
+    if ( p->identity == Sheriff ) continue;
+    if ( p->state == IS_DEAD ) continue;
+
+    for ( int j = 0; j < p->judgeCards->size; j++ ) {
+      if ( p->judgeCards->data[j].kind == JAIL ) {
+        setPlayerColor( &color, -1, player, i, 0, false );
+        num--;
+        break;
+      }
+    }
+    
+  }
+
+  if ( num <= 0 ) {
+    puts( "No player to choose" );
     ENTER;
     return false;
   }
+
+
+  choose_player = choosePlayer( player, -1, color );
+  
+  // if ( choose_player->identity == Sheriff ) {
+  //   printf( "You can't use jail on the Sheriff\n" );
+  //   ENTER;
+  //   return false;
+  // }
   
   
   takeCard( player->handcard, choose_player->judgeCards, index );   

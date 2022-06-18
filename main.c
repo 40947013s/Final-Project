@@ -15,12 +15,13 @@ typedef enum _card_kind
 
 #define TESTCASE \
     Card c; \
-    c.kind = GATLING; \
-    c.sticker = GATLING; \
+    c.kind = JAIL; \
+    c.sticker = JAIL; \
     c.number = 2; \
     c.suit = 2; \
     c.attribute = 1; \
-    c.is_orange = true; \
+    c.is_orange = false; \
+    push_back( p->handcard, c ); \
     push_back( p->handcard, c ); \
     // push_back( p->handcard, c ); \
     // c.kind = JAIL; \
@@ -318,7 +319,6 @@ int main()
           } while ( PLAYERS_LIST[i].state == IS_DEAD );
           
           p = &(PLAYERS_LIST[i]);
-          TESTCASE
           PLAYERS_LIST[i].state = JUDGE;
           PLAYERS_LIST[i].numOfBang = 0;
           // printf( "Player %s starts turn", p->name );
