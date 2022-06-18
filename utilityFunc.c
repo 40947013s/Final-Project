@@ -406,8 +406,6 @@ Card getJudgementCard( Player *player, int kind ) {
   return c;
 }
 
-
-
 bool judgeFunc( Player *player, int kind ) {
     Card card = getJudgementCard( player, kind );
     printf( "%sJudge card:%s\n", RESET, RESET );

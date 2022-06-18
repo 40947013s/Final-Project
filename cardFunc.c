@@ -232,7 +232,7 @@ bool Miss( Player *defender, int n ) {
     
     char msg[100];
     sprintf( msg, "You still need to throw %d MISSED card(s)", n );
-    bool is_use = chooseCard( defender, defender->handcard, -1, NULL, false, true, msg ).number > 0 ? true : false ;
+    bool is_use = chooseCard( defender, defender->handcard, MISSED, NULL, false, true, msg ).number > 0 ? true : false ;
     if ( is_use ) n--;
 
   }

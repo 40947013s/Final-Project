@@ -199,13 +199,13 @@ void playerCard( Player *player ) {
   }
 
   int choice, size = player->handcard->size;
-  char *str = (char *)calloc( strlen("Choice the card you want to play(1~, 0: end the round): ") + 5, sizeof(char) );
-  sprintf( str, "Choice the card you want to play(1~%d, 0: end the round): ", size );
+  char *str = (char *)calloc( strlen("Choose the card you want to play(1~, 0: end the round): ") + 5, sizeof(char) );
+  sprintf( str, "Choose the card you want to play(1~%d, 0: end the round): ", size );
   char input[100] = {0};
   bool warn = false;
   while ( 1 ) {
       
-      printUI( player, "" );
+      printUI( player, "Play Game" );
       if ( warn )
         puts("You can't play this card");
       printHandCard( player->handcard, color, true);
@@ -374,9 +374,7 @@ void IsGameOver( Player *killer, Player *player ){
     }
 
     if ( GAME_STATE == END ) {
-      // puts( "Game Over" );
-      // ENTER;
-      // #define DEBUG
+      ENTER;
       printUI( player, "Game Over" );
       exit(0);
       // return;
