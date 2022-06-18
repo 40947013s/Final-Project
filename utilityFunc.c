@@ -25,11 +25,14 @@ int cardHandler( Player * player, int num ) {
       shuffle();
   }    
 
-  for ( int i = 0; i < num; i++ ) {
+  int i = 0;
+  while ( i < num ) {
       if ( deck->size == 0 ) return i;
       Card tmp = pop_back(deck);
+      if ( tmp.suit == -1 || tmp.number == -1 ) continue;
       tmp.sticker = tmp.kind;
       push_back(player->handcard, tmp);
+      i++;
   }
 
   
@@ -52,7 +55,7 @@ bool discardCard( Card_vector * cards, int index ) {
   Card tmp = get_element( cards, index);
   remove_element((cards), index);
   // 如果是內建則直接丟棄
-  if( tmp.suit == -1 ) {
+  if( tmp.suit == -1 || tmp.number == -1 ) {
       return true;
   }
   tmp.sticker = tmp.kind;
@@ -79,7 +82,7 @@ void discardAllCard( Player *player ) {
   if ( player == NULL ) return;
   while ( !isEmpty( player->handcard ) ) {
     Card tmp = pop_back(player->handcard);
-    if ( tmp.suit == -1 ) continue;
+    if ( tmp.suit == -1 || tmp.number == -1 ) continue;
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
   }
@@ -87,7 +90,7 @@ void discardAllCard( Player *player ) {
   // bool UnloadEquip( Player* player, int kind )
   while ( !isEmpty( player->weapon ) ) {
     Card tmp = pop_back(player->weapon);
-    if ( tmp.suit == -1 ) continue;
+    if ( tmp.suit == -1 || tmp.number == -1 ) continue;
     UnloadEquip( player, tmp.kind );
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
@@ -96,7 +99,7 @@ void discardAllCard( Player *player ) {
   player->equipWeapon = NONE;
   while ( !isEmpty(player->shield) ) {
     Card tmp = pop_back(player->shield);
-    if ( tmp.suit == -1 ) continue;
+    if ( tmp.suit == -1 || tmp.number == -1) continue;
     UnloadEquip( player, tmp.kind );
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
@@ -104,7 +107,7 @@ void discardAllCard( Player *player ) {
 
   while ( !isEmpty( player->distance_item ) ) {
     Card tmp = pop_back(player->distance_item);
-    if ( tmp.suit == -1 ) continue;
+    if ( tmp.suit == -1 || tmp.number == -1) continue;
     UnloadEquip( player, tmp.kind );
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
@@ -113,7 +116,7 @@ void discardAllCard( Player *player ) {
 
   while ( player->state == IS_DEAD && !isEmpty( player->judgeCards ) ) {
     Card tmp = pop_back(player->judgeCards);
-    if ( tmp.suit == -1 ) continue;
+    if ( tmp.suit == -1 || tmp.number == -1 ) continue;
     tmp.sticker = tmp.kind;
     push_back(discardPile, tmp);
   }

@@ -168,7 +168,12 @@ void fKit_Carlson( void* this ) {
         
         card = chooseCard( player, tmpPlayer->handcard, -1, player->handcard, false, true );
         if ( card.number != -1 ) n--;
-        else puts( "You need to take card!" );
+        else {
+          printf( "Active Kit Carlson's skill\n" );
+          puts( "You can get 3 of 2 cards from deck" );
+          puts( "You need to take card!" );
+          ENTER;
+        }
       }
 
       ASSERT( tmpPlayer->handcard->size == 1 );

@@ -82,7 +82,7 @@ void playerCard( Player *player, int *numOfBang ) {
   bool warn = false;
   while ( 1 ) {
       
-      printUI( player );
+      printUI( player, "" );
       if ( warn )
         puts("You can't play this card");
       printHandCard( player->handcard, color, true);
@@ -95,7 +95,7 @@ void playerCard( Player *player, int *numOfBang ) {
       }
       else if ( color[choice-1] == 3 ) {
         color[choice-1] = 1;
-        printUI( player );
+        printUI( player, "" );
         printHandCard( player->handcard, color, true);
         Card tmp = get_element( player->handcard, choice-1 );
         printf( "Are you sure you want to use the card? (Y/n) " );
@@ -137,6 +137,7 @@ void playerCard( Player *player, int *numOfBang ) {
       }
   }
   free( str );
+  free( color );
 }
 
 // 判斷階段：炸藥->監獄
@@ -147,7 +148,7 @@ void judgeTurn( Player *player, Player *nextPlayer ) {
   for ( int i = 0; i < player->judgeCards->size; i++ ) {
     Card card = get_element( player->judgeCards, i );
     if ( card.kind == DYNAMITE ) {
-      printUI( player );
+      printUI( player, "" );
       printf( "%sJudge dynamite%s\n\n", BLUE, RESET );
       judge = judgeFunc( player, DYNAMITE );
       if ( judge ) {
@@ -173,7 +174,7 @@ void judgeTurn( Player *player, Player *nextPlayer ) {
     // printf( "main 133: card kind = %s\n", cardKindName[card.kind] );
     ASSERT( card.kind == JAIL );
 
-    printUI( player );
+    printUI( player, "" );
     printf( "%sJudge jail%s\n\n", BLUE, RESET );
     judge = judgeFunc( player, JAIL );
     discardCard( player->judgeCards, 0  );
@@ -217,7 +218,7 @@ void discardTurn( Player *player ) {
     bool is_discard = false;
     int choice = 1;
     while ( true ) {
-      printUI( player );
+      printUI( player, "" );
       if ( num > 0 ) {
         printf("You have to discard %d handcard(s)\n", num );
         ENTER;
@@ -264,7 +265,7 @@ int main()
     
     while ( GAME_STATE == IN_ROUND && GAME_STATE != END ) 
     {
-      printUI( p );
+      printUI( p, "" );
 
       // call skill function
       for ( int j = 0; j < PLAYERS_NUM; j++ ) {

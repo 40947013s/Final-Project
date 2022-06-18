@@ -51,7 +51,8 @@ void IsGameOver( Player *killer, Player *player ){
     int k = find_position(player->id);  
     calcDistance();
     
-    printUI( player );
+
+    printUI( player, "" );
     printf( "Player %s is dead and his identity is %s\n", player->name, identityName[player->identity] );
     ENTER;
     switch ( player->identity ) {
@@ -103,10 +104,10 @@ void IsGameOver( Player *killer, Player *player ){
     }
 
     if ( GAME_STATE == END ) {
-      puts( "Game Over" );
-      ENTER;
+      // puts( "Game Over" );
+      // ENTER;
       #define DEBUG
-      printUI( player );
+      printUI( player, "Game Over" );
       exit(0);
       // return;
     }
@@ -119,7 +120,7 @@ void IsGameOver( Player *killer, Player *player ){
     }
 
     if ( player->identity == Deputies && killer->identity == Sheriff ) {
-      printUI( killer );
+      printUI( killer, "" );
       puts( "You killed your deputy!" );
       puts( "You have to discard all you handcards and equipments" );
       ENTER;
@@ -128,12 +129,12 @@ void IsGameOver( Player *killer, Player *player ){
 
     for ( int i = 0; i < PLAYERS_NUM; i++ ) {
       if ( PLAYERS_LIST[i].role == Vulture_Sam && PLAYERS_LIST[i].state != IS_DEAD ) {
-        printUI( PLAYERS_LIST + i );
+        printUI( PLAYERS_LIST + i, "" );
         printf( "Active Vulture_Sam's skill\n" );
         puts( "You can take all the cards from the deceased" );
         ENTER;
         takeAllCards( player, &PLAYERS_LIST[i] );
-        printUI( PLAYERS_LIST + i );
+        printUI( PLAYERS_LIST + i, "" );
         puts( "Take!" );
         ENTER;
       }
@@ -147,6 +148,59 @@ void IsGameOver( Player *killer, Player *player ){
 // if limitDistance == -1 then 沒有距離限制
 Player *choosePlayer( Player *attacker, int limitDistance ) {
   if ( attacker == NULL ) return NULL;
+  
+  int *color = NULL;
+  int num = setPlayerColor( &color, limitDistance, attacker, 3, false );
+  if ( num == 0 ) {
+    puts( "You can't attack anyone" );
+    ENTER;
+    return NULL;
+  }
+
+
+  bool warn = false;
+  while ( 1 ) {
+    
+    if ( warn ) 
+      printUI2( attacker, color, "You should choose a player to attack\n" );
+    else
+      printUI2( attacker, color, "Which player to attack\n" );
+
+    int choice = scan( 1, num, "Choose a player: " );
+  
+    char input[100] = {0};
+    
+    if ( color[choice-1] == 2 ) {
+      puts( "You can't attack yourself" );
+      ENTER;
+      continue;
+    }
+    else if ( color[choice-1] == 3 ) {
+      color[choice-1] = 1;
+      printUI2( attacker, color, "Which player to attack\n" );
+      printf( "Are you sure you want to choose this player? (Y/n) " );
+      fgets(input, 100, stdin);
+      if ( input[0] == 'Y' || input[0] == 'y' || input[0] == '\n'  ) {
+        free( color );
+        return PLAYERS_LIST + (choice-1);
+      }
+      else {
+        warn = false;
+        color[choice] = 3;
+        continue;
+      }
+        
+    }
+    else {
+      warn = true;
+      continue;
+    }
+    
+  }
+  
+  free( color );
+  return NULL;
+  
   Player *p = NULL; 
   if( limitDistance == -1 ) limitDistance = 20; //開無限
   int *ID = malloc(PLAYERS_NUM), id_count = 0;
@@ -188,7 +242,7 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
   if ( player == NULL ) return c;
   if ( cards == NULL ) return c;
 
-  printUI( player );
+  printUI( player, "" );
 
   if ( isEmpty( cards ) ) {
     printf("There is no card\n");
@@ -211,6 +265,7 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
     printHandCard( cards, color, visible );
     printf("No card to choose\n");
     ENTER;
+    free( color );
     return c;
   }
 
@@ -220,16 +275,19 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
   bool warn = false;
   char input[100];
   while ( 1 ) {
-    printUI( player );
+    printUI( player, "" );
     if ( warn )
       printf( "You can't choose this card\n" );
     printHandCard( cards, color, visible );
     choice = scan(0, cards->size, str );
-    if ( choice == 0 ) return c;
+    if ( choice == 0 ) {
+      free( color );
+      return c;
+    }
     if ( color[choice-1] == 3 ) {
       warn = false;
       color[choice-1] = 1; // green to red
-      printUI( player );
+      printUI( player, "" );
       printHandCard( cards, color, visible );
       Card tmp = get_element( cards, choice-1 );
       if ( visible )
@@ -243,6 +301,7 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
         else {
           discardCard( cards, choice-1 );
         }
+          free( color );
           return c;
       }else {
           color[choice-1] = 3; // red to green
@@ -254,6 +313,8 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
       continue;
     }
   }
+
+  free( color );
   return c;
 }
 
@@ -270,7 +331,7 @@ bool Bang( Player *attacker ){
   printf( "%s is attacked by %s\n", defender->name, attacker->name );
 
   if ( attacker->role == Slab_the_Killer ) {
-    printUI( defender );
+    printUI( defender, "" );
     printf( "Active Slab_the_Killer's skill\n" );
     printf( "You have to use two (MISS/BARREL) to avoid his BANG\n" );
     ENTER;
@@ -278,7 +339,7 @@ bool Bang( Player *attacker ){
   
   bool miss = Miss( defender, attacker->attack_power );
 
-  printUI( attacker );
+  printUI( attacker, "" );
 
   if ( !miss ) {
     printf( "successful attack!\n" );
@@ -300,7 +361,7 @@ bool Bang( Player *attacker ){
 bool Miss( Player *defender, int n ) {
   if ( defender == NULL ) return false;
   
-  printUI( defender );
+  printUI( defender, "" );
   for ( int i = 0; i < defender->shield->size; i++ ) {
 
     printf( "%sJudge barrel%s\n\n", BLUE, RESET );
@@ -335,7 +396,7 @@ bool Miss( Player *defender, int n ) {
 
   while ( n ) {
     
-    printUI( defender );
+    printUI( defender, "" );
     printf( "You still need to throw %d MISSED card(s)\n", n );
  
     bool is_use = chooseCard( defender, defender->handcard, MISSED, NULL, false, true ).number > 0 ? true : false ;
@@ -367,7 +428,7 @@ bool Indians( Player *attacker ) {
     p = PLAYERS_LIST + i;
 
     bool is_discard_bang = chooseCard( p, p->handcard, BANG, false, false, true ).number > 0 ? true : false; 
-    printUI( attacker );
+    printUI( attacker, "" );
     if ( is_discard_bang ) {
         printf( "%s discard a BANG.\n", p->name );
         ENTER;
@@ -375,7 +436,7 @@ bool Indians( Player *attacker ) {
     else {
       printf( "successful attack!\n" );
       HPModify( p, p, -1, INDIANS );
-      printUI( attacker );
+      printUI( attacker, "" );
     }
 
     do{
@@ -404,7 +465,7 @@ bool Gatling( Player *attacker ) {
     defender = PLAYERS_LIST + i;
 
     bool miss = Miss( defender, 1 );  
-    printUI( attacker );
+    printUI( attacker, "" );
     if ( miss ) {
         printf( "%s avoid attack.\n", defender->name );
         printf( "Missed attacked!\n" );
@@ -413,7 +474,7 @@ bool Gatling( Player *attacker ) {
     else {
         printf( "successful attack!\n" );
         HPModify( attacker, defender, -1, INDIANS );
-        printUI( attacker );
+        printUI( attacker, "" );
     }
 
     do{
@@ -500,7 +561,7 @@ bool Saloow( Player *player ){
 
   for(int i=0;i<PLAYERS_NUM;i++)
   {
-    printUI( player );
+    printUI( player, "" );
     Player *p = PLAYERS_LIST + i;
     if ( p->state == IS_DEAD )
       continue;
@@ -569,7 +630,7 @@ bool panic( Player *attacker ){
   Card card;
   card.number = -1;
   while ( card.number == -1 ) {
-    printUI( attacker );
+    printUI( attacker, "" );
     puts( "Choose the kind of item you want to take" );
     puts( "[0] Quit [1] handcard [2] weapon [3] shield [4] distance item [5] judgement card" );
     choice = scan( 0, 5, "" );
@@ -600,7 +661,7 @@ bool panic( Player *attacker ){
   if ( choice != 1 )
      UnloadEquip( choose_player, card.kind );
 
-  printUI( attacker );
+  printUI( attacker, "" );
   printf( "Get the card[%s] from %s\n", cardKindName[card.kind], choose_player->name );
   ENTER;
   return true;
@@ -626,7 +687,7 @@ bool cat( Player *attacker ) {
   card.number = -1;
   int choice = 0;
   while ( card.number == -1 ) {
-    printUI( choose_player );
+    printUI( choose_player, "" );
     puts( "Choose the kind of item you want to discard" );
     puts( "[1] handcard [2] weapon [3] shield [4] distance item [5] judgement card" );
     choice = scan( 0, 5, "" );
@@ -661,7 +722,7 @@ bool cat( Player *attacker ) {
   if ( choice != 1 )
      UnloadEquip( choose_player, card.kind );
 
-  printUI( attacker );
+  printUI( attacker, "" );
   printf( "You discard one card[%s] from player %s\n", cardKindName[card.kind], choose_player->name );
   ENTER;
   return true;
@@ -706,7 +767,7 @@ bool EquipScope( Player *player, int card_position ) {
 bool UnloadScope( Player *player, Card_vector *cards ){
   if ( player == NULL ) return false;
   
-  printUI( player );
+  printUI( player, "" );
   puts( "You are going to unload the scope" );
   ENTER;
   
@@ -772,7 +833,7 @@ bool EquipMustang( Player *player, int card_position ){
 bool UnloadMustang( Player *player, Card_vector *cards ){
   if ( player == NULL ) return false;
 
-  printUI( player );
+  printUI( player, "" );
   puts( "You are going to unload the mustang" );
   ENTER;
   
@@ -869,7 +930,7 @@ bool UnloadWeapon( Player* player, Card_vector *cards ) {
   if ( player == NULL ) return false;
   
   if ( player->equipWeapon != NONE ) {
-    printUI( player );
+    printUI( player, "" );
     puts( "You are going to unload the weapon" );
     ENTER;
     bool is_discard = false;
@@ -943,7 +1004,7 @@ bool UnloadVolcanic( Player *player, Card_vector *cards ) {
   // Willy the Kid 的回合可以用任意張 BANG
   player->numOfBang = (player->role != Willy_the_Kid) ? 1 : -1;  
 
-  printUI( player );
+  printUI( player, "" );
   puts( "Volcanic unloaded" );
   ENTER;
   return true;
@@ -967,7 +1028,7 @@ bool UnloadSchofield( Player *player, Card_vector *cards ){
   if ( player == NULL ) return false;
   
   player->attack_distance = 1;
-  printUI( player );
+  printUI( player, "" );
   puts( "Schofield unloaded" );
   return true;
 }
@@ -990,7 +1051,7 @@ bool EquipRemington( Player *player, int card_position ){
 bool UnloadRemington( Player *player, Card_vector *cards ){
   if ( player == NULL ) return false;
   player->attack_distance = 1;
-  printUI( player );
+  printUI( player, "" );
   puts( "Remington unloaded" );
   
   return true;
@@ -1012,7 +1073,7 @@ bool EquipRev( Player *player, int card_position ){
 bool UnloadRev( Player *player, Card_vector *cards ){
   if ( player == NULL ) return false;
   player->attack_distance = 1;
-  printUI( player );
+  printUI( player, "" );
   puts( "Rev unloaded" );
   ENTER;
   return true;
@@ -1034,7 +1095,7 @@ bool EquipWinchester( Player *player, int card_position ){
 bool UnloadWinchester( Player *player, Card_vector *cards ){
   if ( player == NULL ) return false;
   player->attack_distance = 1;
-  printUI( player );
+  printUI( player, "" );
   puts( "Winchester unloaded" );
   ENTER;
   return true;
@@ -1042,7 +1103,7 @@ bool UnloadWinchester( Player *player, Card_vector *cards ){
 
 bool EquipDynamite( Player *player, int index ) {
   takeCard( player->handcard, player->judgeCards, index );   
-  printUI( player );
+  printUI( player, "" );
   puts( "Equip dynamite" );
   ENTER;
   return true;
@@ -1061,15 +1122,31 @@ bool EquipJail( Player *player , int index ) {
   
   
   takeCard( player->handcard, choose_player->judgeCards, index );   
-  printUI( player );
+  printUI( player, "" );
   puts( "Equip jail" );
   ENTER;
   return true;
 }
 
 bool EquipBarrel( Player *player, int index ) {
+    if ( player == NULL ) return false;
+    bool had_barrel = false;
+    for ( int i = 0; i < player->shield->size; i++ ) {
+        if( get_element( player->shield, i).suit != -1 ) {
+            had_barrel = true;
+            break;
+        }
+    }
+    
+    if ( had_barrel ) {
+        puts( "Please unload the other BARREL first" );
+        if ( !UnloadBarrel( player ) ) {
+          return false;
+        }
+    }
+    
     takeCard( player->handcard, player->shield, index );   
-    printUI( player );
+    printUI( player, "" );
     puts( "Equip barrel" );
     ENTER;
     return true;
@@ -1090,7 +1167,7 @@ bool UnloadBarrel( Player *player ) {
     }    
     
     discardCard( player->shield, index ); 
-    printUI( player );
+    printUI( player, "" );
     puts( "Unload barrel" );     
     ENTER; 
     return true; 
