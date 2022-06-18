@@ -318,7 +318,7 @@ void printUI2( Player *nowPlayer, int *color, char *msg )
   puts("");
   
 
-  printf( "Now turn: %s\t\tDeck number: %d\t\tDiscard Pile number: %d\n", nowPlayer->name, deck->size, discardPile->size );
+  printf( "Now turn: %s\t\tDeck number: %d\t\tDiscard Pile number: %d\n\n", nowPlayer->name, deck->size, discardPile->size );
   printf( "%s\n", msg );
 
 }

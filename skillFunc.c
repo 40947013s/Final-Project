@@ -88,7 +88,7 @@ void fJesse_Jones( void* this ){
     Player* player = (Player*)this;
     
     if( player->state == GET_CARD ){ 
-      printf( "Active Jesse Jones's skill\n" );
+      // printf( "Active Jesse Jones's skill\n" );
       int choice = 0;
       while ( 1 ) {
         choice = scan(0, 1, "Do you want to get a card from other players?  ( 0 : No, 1 : Yes ) :\n");
@@ -101,7 +101,7 @@ void fJesse_Jones( void* this ){
         {
   
           Player *target = choosePlayer( player, -1, NULL );
-          if ( chooseCard( player, target->handcard, -1, player->handcard, false, false ).number == -1 )
+          if ( chooseCard( player, target->handcard, -1, player->handcard, false, false, "Jesse Jones's skill: Choose Card you want" ).number == -1 )
             continue;
           cardHandler( player, 1 );
           player->state = PLAY_CARD;
@@ -167,7 +167,7 @@ void fKit_Carlson( void* this ) {
     
       while ( n ) {
         
-        card = chooseCard( player, tmpPlayer->handcard, -1, player->handcard, false, true );
+        card = chooseCard( player, tmpPlayer->handcard, -1, player->handcard, false, true, "Kit Carlson's skill: Choose the card you want" );
         if ( card.number != -1 ) n--;
         else {
           printf( "Active Kit Carlson's skill\n" );
@@ -254,7 +254,7 @@ void fSid_Ketchum( void* this ) {
       bool warn = false;
       while ( c.number == -1 ) {
         if ( warn ) puts( "You have to discard a handcard" );
-        c = chooseCard( player, player->handcard, -1, NULL, false, true );
+        c = chooseCard( player, player->handcard, -1, NULL, false, true, "Sid Ketchum's skill: Choose card you want to discard" );
         warn = true;
       }
     } 
@@ -318,7 +318,7 @@ void fEl_Gringo( Player *player, Player *attacker, int num, int kind ) {
 
       while ( num && !isEmpty( attacker->handcard) ) {
         printf("You can choose %d cards from Player %s\n", num, attacker->name);
-        chooseCard( player, attacker->handcard, -1, player->handcard, false, false );
+        chooseCard( player, attacker->handcard, -1, player->handcard, false, false, "El Gringo's skill: Choose the card you want" );
         num--;
       }
 

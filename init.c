@@ -16,16 +16,7 @@ int ALIVE_NUM;
 Card_vector* deck;
 Card_vector* discardPile;
 
-//Skill function
-// Skill skills[16] = {
-//     fBart_Cassidy, fBlack_Jack, fCalamity_Janet, nullFunc,
-//     fJesse_Jones, fJourdonnais, fKit_Carlson, nullFunc,
-//     fPaul_Regret, fPedro_Ramirez, fRose_Doolan, fSid_Ketchum,
-//     fSlab_the_Killer, fSuzy_Lafayette, nullFunc, fWilly_the_Kid
-// };
-
-
-// new: fBart_Cassidy, fSid_Ketchum, fSuzy_Lafayette, fCalamity_Janet
+//Skill
 Skill skills[16] = {
     fBart_Cassidy, fBlack_Jack, fCalamity_Janet, nullFunc,
     fJesse_Jones, fJourdonnais, fKit_Carlson, nullFunc,
@@ -193,7 +184,7 @@ void role_shuffle() {
 // } Role;
 
 
-//   #ifdef DEBUG 
+  #ifdef DEBUG 
     
 
     // PLAYERS_LIST[0].role = Lucky_Duke;
@@ -230,89 +221,9 @@ void role_shuffle() {
     // push_back( PLAYERS_LIST[6].handcard, c ); 
 
     
-//   #endif
+  #endif
 }
 
-void game_prepare()
-{
-    //設定遊戲人數    
-    PLAYERS_NUM = scan(4, 7, "Input the numbers of players (4~7): ");
-    ALIVE_NUM = PLAYERS_NUM;
-    PLAYERS_LIST = (Player*)calloc( PLAYERS_NUM, sizeof(Player) );
-    
-    //設定遊戲玩家名稱
-    char *players = calloc(100, sizeof(char));
-    for(int i = 0; i < PLAYERS_NUM; i++)
-    {
-        PLAYERS_LIST[i].id = i;  
-      init_player(&PLAYERS_LIST[i]);
-        
-        PLAYERS_LIST[i].handcard->id = i;
-        printf( "Input the name of player %d : ", i+1 );
-        fgets( players, 1000, stdin );
-        if( strcmp( players, "\n") == 0 ) {
-            sprintf( players, "Player %d", i+1 );
-        }
-        clean_buffer(players);
-        strcpy(PLAYERS_LIST[i].name, players);
-        //printf("%s\n",PLAYERS_LIST[i].name);
-    }
-  
-    memset( OFFSET_DISTANCE, 0, 100 * sizeof(int) );
-    memset( DISTANCE, 0, 100 * sizeof(int) );
-
-    calcDistance();
-    
-    //設定身分人數
-    SHERIFF_NUM = 1, RENEGADE_NUM = 1;
-    OUTLAWS_NUM = PLAYERS_NUM > 5 ? 3 : 2;
-    DEPUTIES_NUM = PLAYERS_NUM - SHERIFF_NUM - RENEGADE_NUM - OUTLAWS_NUM;
-    
-    int counter = 0;
-    for(int i = 0; i < SHERIFF_NUM; i++)
-        PLAYERS_LIST[counter++].identity = Sheriff;
-    for(int i = 0; i < DEPUTIES_NUM; i++)
-        PLAYERS_LIST[counter++].identity = Deputies;
-    for(int i = 0; i < OUTLAWS_NUM; i++)
-        PLAYERS_LIST[counter++].identity = Outlaws;
-    for(int i = 0; i < RENEGADE_NUM; i++)
-        PLAYERS_LIST[counter++].identity = Renegade;
-    SHERIFF_POSITION = identity_shuffle(); //警長位置
-    
-    /*for(int i = 0; i < PLAYERS_NUM; i++)
-        printf("%d\n", PLAYERS_LIST[i].identity);*/
-
-    //第一次洗牌    
-    deck = create_vector(80);
-    discardPile = create_vector(80);
-    
-    for (int i = 0; i < 80; i++) {
-        push_back(discardPile, CARD[i]);
-    }
-
-    shuffle();   
-  
-    //設定角色    
-    role_shuffle();
-    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-      Player *p = PLAYERS_LIST + i;
-       //skills[p->role]( &p, NULL );
-    }
-    PLAYERS_LIST[SHERIFF_POSITION].hp++;
-    PLAYERS_LIST[SHERIFF_POSITION].hp_limit++;    
- 
-    GAME_STATE = NOT_YET_START;
-}
-
-void set_card(int i, bool o, int s, int n, int a, int k) 
-{
-    CARD[i].is_orange = o;
-    CARD[i].kind = k;
-    CARD[i].sticker = k;
-    CARD[i].suit = s;
-    CARD[i].number = n;
-    CARD[i].attribute = a;
-}
 
 void init_card()
 {    
@@ -324,8 +235,12 @@ void init_card()
     {
         int a, b, c, d, e, f;
         fscanf(fp, "%d%d%d%d%d%d", &a, &b, &c, &d, &e, &f);
-        //printf("%2d  %2d%6d%9d%9d%9d\n", a, b, c, d, e, f);        
-        set_card(i, d, b, c, e, f);
+        CARD[i].is_orange = d;
+        CARD[i].kind = f;
+        CARD[i].sticker = f;
+        CARD[i].suit = b;
+        CARD[i].number = c;
+        CARD[i].attribute = e;
     } 
     fclose(fp);
     free(line);

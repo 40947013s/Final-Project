@@ -1,148 +1,7 @@
 #include "cardFunc.h"
 
-void HPModify( Player* attacker, Player *defender, int n, Kind reason ) {
-  if ( n < 0 ) {    
-    RMode tmp = defender->state;
-    defender->state = MINUS_HP;
-    skills[defender->role]( defender );
-    fEl_Gringo( defender, attacker, n, reason );
-    printf( "%s minus %d hp.\n", defender->name, -n );
-    ENTER;
-    defender->state = tmp;
-    defender->hp += n;
-  }
-  else {
-    printf( "%s plus %d hp.\n", defender->name, n );
-    ENTER;
-    defender->hp += n;
-  }
-
-  IsGameOver( attacker, defender );
-}
-
-// if killer is null, then there is no killer
-// e.g. if the player is killed by dynamite, there is no killer
-void IsGameOver( Player *killer, Player *player ){
-  if ( player->hp <= 0 && ALIVE_NUM > 2 ) {
-// bool Beer( Player *player, killer ); 
-    
-    printf( "You are dying\n" );
-    printf( "Are you going to use beer to add up hp?\n" );
-    int choice = scan( 0, 1, "(1: yes, 0: no) " );
-    if ( choice == 1 ) {
-      Card beer = chooseCard( player, player->handcard, BEER, NULL, false,  true );
-      if ( beer.number != -1 ) {
-          Beer( player, killer );
-          return;
-      } else {
-          puts( "You didn't have beer" );
-          ENTER;
-      }
-    } 
-  }
 
 
-  if ( player->hp <= 0 ) {
-      
-    player->state = IS_DEAD;
-    ALIVE_NUM--;
-
-    // remove the player from the player list
-    int k = find_position(player->id);  
-    calcDistance();
-    
-
-    printUI( player, "" );
-    printf( "Player %s is dead and his identity is %s\n", player->name, identityName[player->identity] );
-    ENTER;
-    switch ( player->identity ) {
-      case Sheriff:
-        SHERIFF_NUM--;
-        break;
-      case Deputies:
-        DEPUTIES_NUM--;
-        break;
-      case Outlaws:
-        OUTLAWS_NUM--;
-        break;
-      case Renegade:
-        RENEGADE_NUM--;
-        break;
-    }
-      
-    
-    // 判斷遊戲是否結束
-    if( SHERIFF_NUM + DEPUTIES_NUM + OUTLAWS_NUM == 0 ) {
-        GAME_STATE = END;
-        // set winner(叛徒)
-        puts( "Renegade win : " );    
-        for(int i = 0; i < PLAYERS_NUM; i++) {
-            if( PLAYERS_LIST[i].identity == Renegade ) {
-                printf("Player %s\n", PLAYERS_LIST[i].name);  
-            }
-        }
-    } else if ( SHERIFF_NUM == 0 ) {
-        GAME_STATE = END;
-        // set winner(歹徒)
-        puts( "Outlaws win : " );    
-        for(int i = 0; i < PLAYERS_NUM; i++) {
-            if( PLAYERS_LIST[i].identity == Outlaws ) {
-                printf("Player %s\n", PLAYERS_LIST[i].name);  
-            }
-        }
-    } else if ( OUTLAWS_NUM + RENEGADE_NUM == 0 ) {
-        GAME_STATE = END;
-        // set winner(警長副警長)
-        puts( "Sheriff and Deputies win : " );    
-        printf("Player %s\n", PLAYERS_LIST[SHERIFF_POSITION].name);  //警長            
-        for(int i = 0; i < PLAYERS_NUM; i++) {
-            Player p = PLAYERS_LIST[i];      
-            if( p.identity == Deputies ) {
-                printf("Player %s\n", PLAYERS_LIST[i].name);              
-            }
-        } 
-    }
-
-    if ( GAME_STATE == END ) {
-      // puts( "Game Over" );
-      // ENTER;
-      // #define DEBUG
-      printUI( player, "Game Over" );
-      exit(0);
-      // return;
-    }
-
-    if ( killer != NULL && killer->state != IS_DEAD ) { 
-      if ( player->identity == Outlaws ) {
-        cardHandler( killer, 3 );
-      }
-      // discardAllCard( killer );
-    }
-
-    if ( player->identity == Deputies && killer->identity == Sheriff ) {
-      printUI( killer, "" );
-      puts( "You killed your deputy!" );
-      puts( "You have to discard all you handcards and equipments" );
-      ENTER;
-      discardAllCard( killer );
-    }
-
-    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-      if ( PLAYERS_LIST[i].role == Vulture_Sam && PLAYERS_LIST[i].state != IS_DEAD ) {
-        printUI( PLAYERS_LIST + i, "" );
-        printf( "Active Vulture_Sam's skill\n" );
-        puts( "You can take all the cards from the deceased" );
-        ENTER;
-        takeAllCards( player, &PLAYERS_LIST[i] );
-        printUI( PLAYERS_LIST + i, "" );
-        puts( "Take!" );
-        ENTER;
-      }
-    }
-    
-    discardAllCard( player );
-  }
-}
 
 // 選擇攻擊對象
 // if limitDistance == -1 then 沒有距離限制
@@ -209,13 +68,13 @@ Player *choosePlayer( Player *attacker, int limitDistance, int *color ) {
 // if get_card != NULL, then card -> get_card
 // otherwise discard the chosen card
 // if except == true, then all the card can be chosen except the kind card
-Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_card, bool except,  bool visible ) {
+Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_card, bool except, bool visible, char *msg ) {
   Card c;
   c.number = -1;
   if ( player == NULL ) return c;
   if ( cards == NULL ) return c;
 
-  printUI( player, "" );
+  printUI( player, msg );
 
   if ( isEmpty( cards ) ) {
     printf("There is no card\n");
@@ -248,7 +107,7 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
   bool warn = false;
   char input[100];
   while ( 1 ) {
-    printUI( player, "" );
+    printUI( player, msg );
     if ( warn )
       printf( "You can't choose this card\n" );
     printHandCard( cards, color, visible );
@@ -260,7 +119,7 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
     if ( color[choice-1] == 3 ) {
       warn = false;
       color[choice-1] = 1; // green to red
-      printUI( player, "" );
+      printUI( player, msg );
       printHandCard( cards, color, visible );
       Card tmp = get_element( cards, choice-1 );
       if ( visible )
@@ -369,10 +228,11 @@ bool Miss( Player *defender, int n ) {
 
   while ( n ) {
     
-    printUI( defender, "" );
-    printf( "You still need to throw %d MISSED card(s)\n", n );
- 
-    bool is_use = chooseCard( defender, defender->handcard, MISSED, NULL, false, true ).number > 0 ? true : false ;
+    // printUI( defender, "" );
+    
+    char msg[100];
+    sprintf( msg, "You still need to throw %d MISSED card(s)", n );
+    bool is_use = chooseCard( defender, defender->handcard, -1, NULL, false, true, msg ).number > 0 ? true : false ;
     if ( is_use ) n--;
 
   }
@@ -400,7 +260,7 @@ bool Indians( Player *attacker ) {
   do {
     p = PLAYERS_LIST + i;
 
-    bool is_discard_bang = chooseCard( p, p->handcard, BANG, false, false, true ).number > 0 ? true : false; 
+    bool is_discard_bang = chooseCard( p, p->handcard, BANG, false, false, true, "Indians: You have to discard a BANG card" ).number > 0 ? true : false; 
     printUI( attacker, "" );
     if ( is_discard_bang ) {
         printf( "%s discard a BANG.\n", p->name );
@@ -494,9 +354,9 @@ bool Store( Player *player ) {
         bool get_card = false;
         bool warn = false;
         while ( !get_card ) {
-          if ( warn ) 
-            puts( "Please choose a card" );
-          get_card = chooseCard( p, tmpPlayer.handcard, -1, p->handcard, false, true ).number > 0 ? true : false ;
+          // if ( warn ) 
+            // puts( "Please choose a card" );
+          get_card = chooseCard( p, tmpPlayer.handcard, -1, p->handcard, false, true, "Store: Choose the card you want" ).number > 0 ? true : false ;
           warn = true;
         }
         do {
@@ -559,7 +419,7 @@ bool Duel( Player *attacker ) {
     bool is_discard_bang = false;
     while(1) {
         if ( turn == 1 ) {
-          is_discard_bang = chooseCard( attacker, attacker->handcard, BANG, NULL, false, true ).number > 0 ? true : false ;
+          is_discard_bang = chooseCard( attacker, attacker->handcard, BANG, NULL, false, true, "Duel: You have to give a BANG" ).number > 0 ? true : false ;
           if ( is_discard_bang ) {
             printf( "Player %s discard a BANG.\n", attacker->name );
             printf( "Now is %s's turn\n", dueler->name );
@@ -574,7 +434,7 @@ bool Duel( Player *attacker ) {
           }
         }
         else {
-          is_discard_bang = chooseCard( dueler, dueler->handcard, BANG, NULL, false, true ).number > 0 ? true : false ;
+          is_discard_bang = chooseCard( dueler, dueler->handcard, BANG, NULL, false, true, "Duel: You have to give a BANG" ).number > 0 ? true : false ;
           if ( is_discard_bang ) {
             printf( "Player %s discard a BANG.\n", dueler->name );
             printf( "Now is %s's turn\n", attacker->name );
@@ -614,19 +474,19 @@ bool panic( Player *attacker ){
         ENTER;
         return false;
       case 1:
-        card = chooseCard( attacker, choose_player->handcard, -1, attacker->handcard, false, false );
+        card = chooseCard( attacker, choose_player->handcard, -1, attacker->handcard, false, false, "Panic: Choose the card you want" );
         break;
       case 2:
-        card = chooseCard( attacker, choose_player->weapon, -1, attacker->handcard, false, true );
+        card = chooseCard( attacker, choose_player->weapon, -1, attacker->handcard, false, true, "Panic: Choose the card you want" );
         break;
       case 3:
-        card = chooseCard( attacker, choose_player->shield, -1, attacker->handcard, false, true );
+        card = chooseCard( attacker, choose_player->shield, -1, attacker->handcard, false, true, "Panic: Choose the card you want" );
         break;
       case 4:
-        card = chooseCard( attacker, choose_player->distance_item, -1, attacker->handcard, false, true );
+        card = chooseCard( attacker, choose_player->distance_item, -1, attacker->handcard, false, true, "Panic: Choose the card you want" );
         break;
       case 5:
-        card = chooseCard( attacker, choose_player->judgeCards, JAIL, attacker->handcard, true, true );
+        card = chooseCard( attacker, choose_player->judgeCards, JAIL, attacker->handcard, true, true, "Panic: Choose the card you want" );
         break;
     }
     
@@ -671,23 +531,23 @@ bool cat( Player *attacker ) {
         ENTER;
         return false;
       case 1:
-        card = chooseCard( choose_player, choose_player->handcard, -1, NULL, false, true );
+        card = chooseCard( choose_player, choose_player->handcard, -1, NULL, false, true, "CAT BALOU: Choose the card you want to discard" );
         break;
       case 2:
-        card = chooseCard( choose_player, choose_player->weapon, -1, NULL, false, true );
+        card = chooseCard( choose_player, choose_player->weapon, -1, NULL, false, true, "CAT BALOU: Choose the card you want to discard" );
         break;
       case 3:
-        card = chooseCard( choose_player, choose_player->shield, -1, NULL, false, true );
+        card = chooseCard( choose_player, choose_player->shield, -1, NULL, false, true, "CAT BALOU: Choose the card you want to discard" );
         if ( card.number != -1 )
           // call function
         break;
       case 4:
-        card = chooseCard( choose_player, choose_player->distance_item, -1, NULL, false, true );
+        card = chooseCard( choose_player, choose_player->distance_item, -1, NULL, false, true, "CAT BALOU: Choose the card you want to discard");
         if ( card.number != -1 )
           // call function
         break;
       case 5:
-        card = chooseCard( choose_player, choose_player->judgeCards, JAIL, NULL, true, true );
+        card = chooseCard( choose_player, choose_player->judgeCards, JAIL, NULL, true, true, "CAT BALOU: Choose the card you want to discard" );
         break;
     }
   }
@@ -741,12 +601,12 @@ bool EquipScope( Player *player, int card_position ) {
 bool UnloadScope( Player *player, Card_vector *cards ){
   if ( player == NULL ) return false;
   
-  printUI( player, "" );
-  puts( "You are going to unload the scope" );
-  ENTER;
+  // printUI( player, "" );
+  // puts( "You are going to unload the scope" );
+  // ENTER;
   
   bool is_discard = false;
-  is_discard = chooseCard( player, player->distance_item, SCOPE, cards, false, true ).number > 0 ? true : false ;
+  is_discard = chooseCard( player, player->distance_item, SCOPE, cards, false, true, "Choose the scope to unload" ).number > 0 ? true : false ;
     
   if ( !is_discard ) {
     puts( "Not unload the scope" );
@@ -807,17 +667,14 @@ bool EquipMustang( Player *player, int card_position ){
 bool UnloadMustang( Player *player, Card_vector *cards ){
   if ( player == NULL ) return false;
 
-  printUI( player, "" );
-  puts( "You are going to unload the mustang" );
-  ENTER;
+  // printUI( player, "" );
+  // puts( "You are going to unload the mustang" );
+  // ENTER;
   
   bool is_discard = false;
-  if ( cards == NULL ) {
-    is_discard = chooseCard( player, player->distance_item, MUSTANG, NULL, false, true ).number > 0 ? true : false ;
-  }
-  else {
-    is_discard = chooseCard( player, player->distance_item, MUSTANG, cards, false, true ).number > 0 ? true : false ;
-  }
+
+  is_discard = chooseCard( player, player->distance_item, MUSTANG, cards, false, true, "Choose the mustang card to unload" ).number > 0 ? true : false ;
+  
     
   if ( !is_discard ) {
     puts( "Not unload the mustang" );
@@ -904,33 +761,33 @@ bool UnloadWeapon( Player* player, Card_vector *cards ) {
   if ( player == NULL ) return false;
   
   if ( player->equipWeapon != NONE ) {
-    printUI( player, "" );
-    puts( "You are going to unload the weapon" );
-    ENTER;
+    // printUI( player, "" );
+    // puts( "You are going to unload the weapon" );
+    // ENTER;
     bool is_discard = false;
  
     if ( player->equipWeapon == VOLCANIC ) {
-      is_discard = chooseCard( player, player->weapon, VOLCANIC, cards, false, true ).number > 0 ? true : false ;
+      is_discard = chooseCard( player, player->weapon, VOLCANIC, cards, false, true, "Choose the weapon to unload" ).number > 0 ? true : false ;
       if ( is_discard )
         UnloadVolcanic( player, NULL );
     }
     else if ( player->equipWeapon == SCHOFIELD ) {
-      is_discard = chooseCard( player, player->weapon, SCHOFIELD, cards, false, true ).number > 0 ? true : false ;
+      is_discard = chooseCard( player, player->weapon, SCHOFIELD, cards, false, true, "Choose the weapon to unload" ).number > 0 ? true : false ;
       if ( is_discard )
         UnloadSchofield( player, NULL );
     }
     else if ( player->equipWeapon == REMINGTON ) {
-      is_discard = chooseCard( player, player->weapon, REMINGTON, cards, false, true ).number > 0 ? true : false ;
+      is_discard = chooseCard( player, player->weapon, REMINGTON, cards, false, true, "Choose the weapon to unload" ).number > 0 ? true : false ;
       if ( is_discard )
         UnloadRemington( player, NULL );
     }
     else if ( player->equipWeapon == REV ) {
-      is_discard = chooseCard( player, player->weapon, REV, cards, false, true ).number > 0 ? true : false ;
+      is_discard = chooseCard( player, player->weapon, REV, cards, false, true, "Choose the weapon to unload" ).number > 0 ? true : false ;
       if ( is_discard )
         UnloadRev( player, NULL );
     }
     else if ( player->equipWeapon == WINCHEDTER ) {
-      is_discard = chooseCard( player, player->weapon, WINCHEDTER, cards, false, true ).number > 0 ? true : false ;
+      is_discard = chooseCard( player, player->weapon, WINCHEDTER, cards, false, true, "Choose the weapon to unload" ).number > 0 ? true : false ;
       if ( is_discard )
         UnloadWinchester( player, NULL );
     }

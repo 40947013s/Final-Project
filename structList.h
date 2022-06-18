@@ -1,7 +1,34 @@
 #pragma once
 
+// #define DEBUG
+
 #include <stdbool.h>
 #include <stdlib.h>
+#include <assert.h>
+
+#define number_of_players(x) x >= 4 && x <= 7
+#define SKILL_RANGE(x) ( x >= 0 && x < 16 )
+
+#define GRAY "\033[30m"
+#define RED   "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW   "\033[33m"
+#define BLUE   "\033[34m"
+#define MAG   "\033[35m"
+#define CYN   "\033[36m"
+#define WHT   "\033[37m"
+#define GRAY_BACK "\033[1;100m"
+#define RED_BACK   "\033[41m"
+#define RESET "\033[0m"
+#define ENTER printf("\n%s%sPress Enter to Continue%s", "\033[100m", GRAY, RESET); while( getchar() != '\n' )
+
+#ifdef DEBUG
+    #define ASSERT(x) assert(x)
+#else
+    #define ASSERT(x) assert(true)
+#endif
+
+
 
 
 /* 角色狀態
@@ -108,3 +135,9 @@ typedef struct _player_list
     int numOfBang;
     int bangLimit;
 } Player;
+
+
+
+typedef void (*Skill) ( void *this );
+typedef bool (*OrangeCard) ( Player *this );
+typedef bool (*BlueCard) ( Player *player, int pos );

@@ -7,14 +7,12 @@
 #include "vector.h"
 #include "utilityFunc.h"
 #include "UI.h"
-#include "defineList.h"
 #include "skillFunc.h"
 
-void HPModify( Player* attacker, Player *defender, int n, Kind reason );
-void IsGameOver( Player *killer, Player *player );
+
 
 Player *choosePlayer( Player *attacker, int limitDistance, int *color );
-Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_card, bool except, bool visible );
+Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_card, bool except, bool visible, char *msg );
 
 // orange card
 bool Bang( Player *attacker ); // yes

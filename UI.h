@@ -5,7 +5,6 @@
 #include "structList.h"
 #include "vector.h"
 #include "globalVar.h"
-#include "defineList.h"
 #include "utilityFunc.h"
 
 void printHandCard( Card_vector *cards, int color[], bool visible );

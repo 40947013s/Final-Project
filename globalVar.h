@@ -1,7 +1,6 @@
 #pragma once
 
 #include "structList.h"
-#include "defineList.h"
 
 
 extern int PLAYERS_NUM; //遊戲人數

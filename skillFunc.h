@@ -1,8 +1,8 @@
 #pragma once
-#include "defineList.h"
+
 #include "cardFunc.h"
 #include "structList.h"
-#include "init.h"
+#include "game.h"
 
 void fBart_Cassidy( void* this );
 void fBlack_Jack( void* this );
