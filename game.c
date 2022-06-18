@@ -20,7 +20,8 @@ void game_prepare()
         if( strcmp( players, "\n") == 0 ) {
             sprintf( players, "Player %d", i+1 );
         }
-        clean_buffer(players);
+        else
+          clean_buffer(players);
         strcpy(PLAYERS_LIST[i].name, players);
         //printf("%s\n",PLAYERS_LIST[i].name);
     }
@@ -375,6 +376,7 @@ void IsGameOver( Player *killer, Player *player ){
 
     if ( GAME_STATE == END ) {
       ENTER;
+      gameEndUI();
       printUI( player, "Game Over" );
       exit(0);
       // return;

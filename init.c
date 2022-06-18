@@ -119,6 +119,7 @@ void role_shuffle() {
     srand(time(NULL));
     bool is_take[16] = {0};
     for(int i = 0; i < PLAYERS_NUM; i++) {
+        system( "clear" );
         Role j = rand() % 16, res;
         while(is_take[j]) {
             j = (j+1) % 16;
@@ -168,6 +169,7 @@ void role_shuffle() {
             PLAYERS_LIST[i].role = k, res = k;
         }
         printf( "%sYour role: %s%s\n\n", YELLOW, roleName[res], RESET );
+        ENTER;
         PLAYERS_LIST[i].hp = 4, PLAYERS_LIST[i].hp_limit = 4;
         if( res == El_Gringo || res == Paul_Regret ) {
             PLAYERS_LIST[i].hp --, PLAYERS_LIST[i].hp_limit --;

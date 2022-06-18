@@ -15,3 +15,4 @@ void printCard( Card card, char *color );
 int setPlayerColor( int **c, int limit_distance, Player *player, int index, int color, bool is_default );
 void printUI2( Player *nowPlayer, int *color, char *msg );
 void gameStartUI();
+void gameEndUI();
