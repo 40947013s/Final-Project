@@ -7,12 +7,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 
 int cardHandler( Player * player, int num );
 bool discardCard( Card_vector * cards, int index );
 void clean_buffer(char *arr);
-int scan(int min, int max, char *str);
+int scan(int min, int max, char *str, bool isAI );
 void shuffle();
 bool takeCard( Card_vector *p1, Card_vector *p2, int index );
 void discardAllCard( Player *player );
@@ -24,3 +25,4 @@ int min(int a, int b);
 void calcDistance() ;
 Card getJudgementCard( Player *player, int kind );
 bool judgeFunc( Player *player, int kind );
+void renewRelationdhip( Player *attacker, Player *defender );

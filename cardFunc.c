@@ -1,10 +1,67 @@
 #include "cardFunc.h"
 
+
+Player *AIChoosePlayer( Player *attacker, int limitDistance, int *color ) {
+  if ( attacker == NULL ) return NULL;
+  
+  printf( "%s choosing player...\n", attacker->name );
+  sleep( waitTime );
+
+
+  if ( color == NULL ) {
+    
+    int num = setPlayerColor( &color, limitDistance, attacker, -1, 3, false );
+    if ( num == 0 ) {
+      // puts( "You can't attack anyone" );
+      // ENTER;
+      return NULL;
+    }
+  }
+
+  srand(time(NULL));
+  int choice = -1;
+  int min = 100;
+  int start = rand() % PLAYERS_NUM;
+  int i = start;
+
+  do {
+    Player *p = PLAYERS_LIST + i;
+    if ( color[i] == 3 ) {
+      if ( choice == -1 ) {
+        choice = i+1;
+        min = RELATIONSHIP[attacker->id][i];
+      }
+      else if ( min > RELATIONSHIP[attacker->id][i] ) {
+        choice = i+1;
+        min = RELATIONSHIP[attacker->id][i];
+      }
+    }
+
+    i = (i+1) % PLAYERS_NUM;
+  } while ( i != start );
+
+
+  // #ifdef DEBUG
+    printf( "%s choose %s\n", attacker->name, PLAYERS_LIST[choice-1].name );
+    ENTER;
+  // #endif
+ 
+    
+  free( color );
+  if ( choice == -1 ) return NULL;
+  return PLAYERS_LIST + (choice-1);
+
+}
+
 // 選擇攻擊對象
 // if limitDistance == -1 then 沒有距離限制
 Player *choosePlayer( Player *attacker, int limitDistance, int *color ) {
   if ( attacker == NULL ) return NULL;
   
+  if ( attacker->isAI ) {
+    return AIChoosePlayer( attacker, limitDistance, color );
+  }
+
   if ( color == NULL ) {
     // int *color = NULL;
     int num = setPlayerColor( &color, limitDistance, attacker, -1, 3, false );
@@ -24,7 +81,7 @@ Player *choosePlayer( Player *attacker, int limitDistance, int *color ) {
     else
       printUI2( attacker, color, "Which player to attack\n" );
 
-    int choice = scan( 1, PLAYERS_NUM, "Choose a player: " );
+    int choice = scan( 1, PLAYERS_NUM, "Choose a player: ", false );
   
     char input[100] = {0};
     
@@ -62,11 +119,15 @@ Player *choosePlayer( Player *attacker, int limitDistance, int *color ) {
 } 
 
 Card AIChooseCard( Player *player, Card_vector *cards, int kind, Card_vector *get_card, bool except, char *msg ) {
+  
   Card c;
   c.number = -1;
   if ( player == NULL || cards == NULL ) return c;
 
   printUI( player, msg );
+
+  printf( "%s choosing the card....\n", player->name );
+  sleep( waitTime );
 
   if ( isEmpty( cards ) ) {
     return c;
@@ -83,12 +144,15 @@ Card AIChooseCard( Player *player, Card_vector *cards, int kind, Card_vector *ge
     num -= tmp;
   }
   
-  if ( num == 0 ) {
+  if ( num <= 0 ) {
     free( color );
     return c;
   }
 
-  for ( int i = 0; i < cards->size; i++ ) {
+  srand(time(NULL));
+  int times = 50;
+  while ( times-- ) {
+    int i = rand() % cards->size;
     if ( color[i] == 3 ) {
       c = get_element( cards, i );
       if ( get_card != NULL ) {
@@ -97,6 +161,12 @@ Card AIChooseCard( Player *player, Card_vector *cards, int kind, Card_vector *ge
       else {
         discardCard( cards, i );
       }
+
+
+      // #ifdef DEBUG
+      printCard( c, GREEN );
+      ENTER;
+      // #endif
 
       free( color );
       return c;
@@ -111,10 +181,14 @@ Card AIChooseCard( Player *player, Card_vector *cards, int kind, Card_vector *ge
 // otherwise discard the chosen card
 // if except == true, then all the card can be chosen except the kind card
 Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_card, bool except, bool visible, char *msg ) {
+  
   Card c;
   c.number = -1;
   if ( player == NULL ) return c;
   if ( cards == NULL ) return c;
+  if ( player->isAI ) {
+    return AIChooseCard( player, cards, kind, get_card, except, msg );
+  }
 
   printUI( player, msg );
 
@@ -153,7 +227,7 @@ Card chooseCard( Player *player, Card_vector* cards, int kind, Card_vector* get_
     if ( warn )
       printf( "You can't choose this card\n" );
     printHandCard( cards, color, visible );
-    choice = scan(0, cards->size, str );
+    choice = scan(0, cards->size, str, false );
     if ( choice == 0 ) {
       free( color );
       return c;
@@ -258,35 +332,36 @@ bool Miss( Player *defender, int n ) {
   }
 
   if ( numOfMiss < n ) {
-    printf( "You don't have enough MISSED(s) to use\n" );
-    ENTER;
+    if ( defender->isAI == false ) {
+      printf( "You don't have enough MISSED(s) to use\n" );
+      ENTER;
+    }
+    
     return false;
   }
 
-  if( scan(0, 1, "Do you want to use card MISSED(s) to avoid attack ? (0 : NO, 1 : YES) \n") == 0 ) {
+  if( scan(0, 1, "Do you want to use card MISSED(s) to avoid attack ? (0 : NO, 1 : YES) \n", defender->isAI ) == 0 ) {
       return false;
   }
 
 
   while ( n ) {
     
-    // printUI( defender, "" );
-    
     char msg[100];
     sprintf( msg, "You still need to throw %d MISSED card(s)", n );
-    // bool is_use = chooseCard( defender, defender->handcard, MISSED, NULL, false, true, msg ).number > 0 ? true : false ;
-    Card c = AIChooseCard( defender, defender->handcard, MISSED, NULL, false, msg );
-    bool is_use = true;
-    puts( "test AIChooseCard: " );
-    printCard( c, GREEN );
+    
+    bool is_use = chooseCard( defender, defender->handcard, MISSED, NULL, false, true, msg ).number > 0 ? true : false ;
+      
     ENTER;
-
     if ( is_use ) n--;
 
   }
 
-  printf( "Avoid attack!\n" );
-  ENTER;
+  if ( !defender->isAI ) {
+    printf( "Avoid attack!\n" );
+    ENTER;
+  }
+  
   return true;
 }  
 
@@ -308,7 +383,11 @@ bool Indians( Player *attacker ) {
   do {
     p = PLAYERS_LIST + i;
 
-    bool is_discard_bang = chooseCard( p, p->handcard, BANG, false, false, true, "Indians: You have to discard a BANG card" ).number > 0 ? true : false; 
+    bool is_discard_bang = false;
+    
+    
+    is_discard_bang = chooseCard( p, p->handcard, BANG, false, false, true, "Indians: You have to discard a BANG card" ).number > 0 ? true : false; 
+
     printUI( attacker, "" );
     if ( is_discard_bang ) {
         printf( "%s discard a BANG.\n", p->name );
@@ -400,12 +479,10 @@ bool Store( Player *player ) {
     do {
         p = PLAYERS_LIST + i;
         bool get_card = false;
-        bool warn = false;
+        
         while ( !get_card ) {
-          // if ( warn ) 
-            // puts( "Please choose a card" );
           get_card = chooseCard( p, tmpPlayer.handcard, -1, p->handcard, false, true, "Store: Choose the card you want" ).number > 0 ? true : false ;
-          warn = true;
+          
         }
         do {
           i++;
@@ -468,8 +545,9 @@ bool Duel( Player *attacker ) {
     while(1) {
         if ( turn == 1 ) {
           is_discard_bang = chooseCard( attacker, attacker->handcard, BANG, NULL, false, true, "Duel: You have to give a BANG" ).number > 0 ? true : false ;
+          ENTER;
           if ( is_discard_bang ) {
-            printf( "Player %s discard a BANG.\n", attacker->name );
+            printf( "%s discard a BANG.\n", attacker->name );
             printf( "Now is %s's turn\n", dueler->name );
             turn = 2;
             ENTER;
@@ -482,6 +560,7 @@ bool Duel( Player *attacker ) {
           }
         }
         else {
+          
           is_discard_bang = chooseCard( dueler, dueler->handcard, BANG, NULL, false, true, "Duel: You have to give a BANG" ).number > 0 ? true : false ;
           if ( is_discard_bang ) {
             printf( "Player %s discard a BANG.\n", dueler->name );
@@ -515,7 +594,7 @@ bool panic( Player *attacker ){
     printUI( attacker, "" );
     puts( "Choose the kind of item you want to take" );
     puts( "[0] Quit [1] handcard [2] weapon [3] shield [4] distance item [5] judgement card" );
-    choice = scan( 0, 5, "" );
+    choice = scan( 0, 5, "", attacker->isAI );
     switch ( choice ) {
       case 0:
         puts( "Give up to use the card" );
@@ -572,7 +651,7 @@ bool cat( Player *attacker ) {
     printUI( choose_player, "" );
     puts( "Choose the kind of item you want to discard" );
     puts( "[1] handcard [2] weapon [3] shield [4] distance item [5] judgement card" );
-    choice = scan( 0, 5, "" );
+    choice = scan( 1, 5, "", choose_player->isAI );
     switch ( choice ) {
       case 0:
         puts( "Choose again" );
@@ -586,13 +665,9 @@ bool cat( Player *attacker ) {
         break;
       case 3:
         card = chooseCard( choose_player, choose_player->shield, -1, NULL, false, true, "CAT BALOU: Choose the card you want to discard" );
-        if ( card.number != -1 )
-          // call function
         break;
       case 4:
         card = chooseCard( choose_player, choose_player->distance_item, -1, NULL, false, true, "CAT BALOU: Choose the card you want to discard");
-        if ( card.number != -1 )
-          // call function
         break;
       case 5:
         card = chooseCard( choose_player, choose_player->judgeCards, JAIL, NULL, true, true, "CAT BALOU: Choose the card you want to discard" );

@@ -88,10 +88,10 @@ void fJesse_Jones( void* this ){
     Player* player = (Player*)this;
     
     if( player->state == GET_CARD ){ 
-      // printf( "Active Jesse Jones's skill\n" );
+      printf( "Active Jesse Jones's skill\n" );
       int choice = 0;
       while ( 1 ) {
-        choice = scan(0, 1, "Do you want to get a card from other players?  ( 0 : No, 1 : Yes ) :\n");
+        choice = scan(0, 1, "Do you want to get a card from other players?  ( 0 : No, 1 : Yes ) :\n", player->isAI );
         if(choice == 0)
         {
           cardHandler( player, 2 );
@@ -101,8 +101,8 @@ void fJesse_Jones( void* this ){
         {
   
           Player *target = choosePlayer( player, -1, NULL );
-          if ( chooseCard( player, target->handcard, -1, player->handcard, false, false, "Jesse Jones's skill: Choose Card you want" ).number == -1 )
-            continue;
+          Card c = chooseCard( player, target->handcard, -1, player->handcard, false, false, "Jesse Jones's skill: Choose Card you want" );
+          if ( c.number == -1 ) continue;
           cardHandler( player, 1 );
           player->state = PLAY_CARD;
           puts( "State change from GET_CARD to PLAY_CARD" );
@@ -202,7 +202,7 @@ void fPedro_Ramirez( void* this ) {
         puts( "You can get first from deck or discard pile" );
         puts( "Enter where you want to get card ( 0 : discard, 1 : deck ) :" );
         
-        int choice = scan(0, 1, "");
+        int choice = scan(0, 1, "", player->isAI );
         if(choice == 1) cardHandler( player, 1 );
         else {
             Card card = pop_back(discardPile);
@@ -245,7 +245,7 @@ void fSid_Ketchum( void* this ) {
   while( player->handcard->size >= 2 ) {
     printf( "Active Sid Ketchum's skill\n" );
     char str[] = "Do you want to discard 2 cards to add 1 hp ( 0 : NO, 1 : YES ) ";
-    int choice = scan(0, 1, str );
+    int choice = scan(0, 1, str, player->isAI );
     if( choice == 0 ) return;        
     
     for(int i = 0; i < 2; i++) {

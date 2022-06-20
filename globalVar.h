@@ -40,3 +40,8 @@ extern char *Color[];
 // state
 extern char *stateName[];
 
+// wait times
+extern int waitTime;
+
+// relationship
+extern int RELATIONSHIP[10][10];

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unistd.h>
 #include "init.h"
 
 void game_prepare();

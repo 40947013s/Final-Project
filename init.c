@@ -6,6 +6,7 @@ int PLAYERS_NUM, DEAD_NUM; //遊戲人數
 int SHERIFF_NUM, DEPUTIES_NUM, OUTLAWS_NUM, RENEGADE_NUM; //身分人數
 int SHERIFF_POSITION;
 int DISTANCE[10][10]; //相對距離表 distance[i][j]: i 看 j
+int RELATIONSHIP[10][10]; //忠誠度表 loyalty[i][j]: 
 int OFFSET_DISTANCE[10][10];
 GMode GAME_STATE; //遊戲狀態
 Card CARD[80]; //消耗牌+裝備牌
@@ -15,6 +16,8 @@ int ALIVE_NUM;
 
 Card_vector* deck;
 Card_vector* discardPile;
+
+int waitTime = 1;
 
 //Skill
 Skill skills[16] = {
@@ -98,6 +101,7 @@ void init_player(Player *player)
     player->identity = Sheriff;
     player->numOfBang = 0;
     player->bangLimit = 1;
+    player->isAI = false;
 }
 
 int identity_shuffle() {
@@ -132,7 +136,7 @@ void role_shuffle() {
         is_take[k] = true;
       
         printf( "Now turn: %s\n", PLAYERS_LIST[i].name );
-        printf( "Your identity is %s\n\n", identityName[PLAYERS_LIST[i].identity] );
+        // printf( "Your identity is %s\n\n", identityName[PLAYERS_LIST[i].identity] );
 
         // print role j
         char str[1000] = {0};
@@ -162,14 +166,19 @@ void role_shuffle() {
         remove( "j.txt" );
         remove( "k.txt" );
 
-      
+        srand(time(NULL));
         puts( "Which role card to choose (0 or 1): " );
-        printf( "[0] %s, [1] %s\n", roleName[j], roleName[k]);
-        int choice = scan(0, 1, "--> ");
-        if(choice == 0) {
+        printf( "[0] Computer, [1] %s, [2] %s\n", roleName[j], roleName[k]);
+        int choice = scan(0, 2, "--> ", false);
+        if(choice == 1) {
             PLAYERS_LIST[i].role = j, res = j;
-        } else {
+        } else if ( choice == 2 ) {
             PLAYERS_LIST[i].role = k, res = k;
+        }
+        else{
+            int r = rand() % 2;
+            PLAYERS_LIST[i].role = (r == 1) ? j : k, res = (r == 1) ? j : k;
+            PLAYERS_LIST[i].isAI = true;
         }
         printf( "%sYour role: %s%s\n\n", YELLOW, roleName[res], RESET );
         ENTER;
@@ -192,7 +201,7 @@ void role_shuffle() {
   #ifdef DEBUG 
     
 
-    // PLAYERS_LIST[0].role = Lucky_Duke;
+    // PLAYERS_LIST[0].role = Jesse_Jones;
     // PLAYERS_LIST[2].role = Pedro_Ramirez;
     // PLAYERS_LIST[2].role = Rose_Doolan;
     // PLAYERS_LIST[3].role = Sid_Ketchum;
@@ -249,5 +258,17 @@ void init_card()
     } 
     fclose(fp);
     free(line);
+}
+
+void setRelationship() {
+    for ( int i = 0; i < PLAYERS_NUM; i++) {
+        Player *p = PLAYERS_LIST + i;
+        if ( p->identity == Deputies ) {
+            RELATIONSHIP[i][SHERIFF_POSITION] = 100;
+        }
+        if ( p->identity == Outlaws ) {
+            RELATIONSHIP[i][SHERIFF_POSITION] = -100;
+        }
+    }
 }
 

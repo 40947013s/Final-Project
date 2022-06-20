@@ -19,4 +19,5 @@ void init_card();
 void init_player(Player *player);
 int identity_shuffle();
 void role_shuffle();
+void setRelationship();
 

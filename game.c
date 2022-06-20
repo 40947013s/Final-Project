@@ -3,7 +3,7 @@
 void game_prepare()
 {
     //設定遊戲人數    
-    PLAYERS_NUM = scan(4, 7, "Input the numbers of players (4~7): ");
+    PLAYERS_NUM = scan(4, 7, "Input the numbers of players (4~7): ", false );
     ALIVE_NUM = PLAYERS_NUM;
     PLAYERS_LIST = (Player*)calloc( PLAYERS_NUM, sizeof(Player) );
     
@@ -28,6 +28,7 @@ void game_prepare()
   
     memset( OFFSET_DISTANCE, 0, 100 * sizeof(int) );
     memset( DISTANCE, 0, 100 * sizeof(int) );
+    memset( RELATIONSHIP, 0, 100 * sizeof(int) );
 
     calcDistance();
     
@@ -45,10 +46,9 @@ void game_prepare()
         PLAYERS_LIST[counter++].identity = Outlaws;
     for(int i = 0; i < RENEGADE_NUM; i++)
         PLAYERS_LIST[counter++].identity = Renegade;
-    SHERIFF_POSITION = identity_shuffle(); //警長位置
     
-    /*for(int i = 0; i < PLAYERS_NUM; i++)
-        printf("%d\n", PLAYERS_LIST[i].identity);*/
+    SHERIFF_POSITION = identity_shuffle(); //警長位置
+    setRelationship();
 
     //第一次洗牌    
     deck = create_vector(80);
@@ -70,6 +70,8 @@ void game_prepare()
 }
 
 void HPModify( Player* attacker, Player *defender, int n, Kind reason ) {
+  if (defender == NULL ) return;
+
   if ( n < 0 ) {    
     RMode tmp = defender->state;
     defender->state = MINUS_HP;
@@ -79,6 +81,10 @@ void HPModify( Player* attacker, Player *defender, int n, Kind reason ) {
     ENTER;
     defender->state = tmp;
     defender->hp += n;
+
+    if ( attacker != NULL ) {
+      renewRelationdhip( attacker, defender );
+    }
   }
   else {
     printf( "%s plus %d hp.\n", defender->name, n );
@@ -155,9 +161,117 @@ void judgeTurn( Player *player, Player *nextPlayer ) {
   ENTER;
 }
 
+
+void AIPlayerCard( Player *player ) { 
+  if ( player == NULL ) return;
+  if ( player->state == IS_DEAD ) return;
+
+  int *color = NULL;
+  int num = setColor( &color, -1, -1, 1, player->handcard, 3 );
+
+  if ( player->role == Willy_the_Kid ) {
+    printf( "Active Willy_the_Kid's skill\n" );
+    printf( "%s have unlimited times to use BANG", player->name );
+    ENTER;
+  }
+
+  if ( player->role == Calamity_Janet ) {
+    setColor( &color, -1, MISSED, 0, player->handcard, 3 );
+  }
+  
+  if ( player->numOfBang >= player->bangLimit && player->bangLimit != -1 ) {
+    setColor( &color, -1, BANG, 0, player->handcard, 0 );
+    setColor( &color, -1, MISSED, 0, player->handcard, 0 );
+  }
+
+  if ( ALIVE_NUM <= 2 ) {
+    setColor( &color, -1, BEER, 0, player->handcard, 0 );
+  }
+
+  if ( player->hp >= player->hp_limit ) {
+    setColor( &color, -1, SALOOW, 0, player->handcard, 0 );
+    setColor( &color, -1, BEER, 0, player->handcard, 0 );
+  }
+  
+  if ( num == 0 ) {
+    // puts("No cards available");
+    player->state = DISCARD_CARD;
+    puts( "State: Player Card -> Discard Card" );
+    ENTER;
+    return;
+  }
+
+  int choice;
+      
+  printUI( player, "Play Game" );
+
+  srand(time(NULL));
+  int times = 50;
+  while ( times-- ) {
+    int i = rand() % (player->handcard->size+1);
+    if ( i == 0 ) {
+      choice = 0;
+      break;
+    }
+    if ( color[i-1] == 3 ) {
+      choice = i;
+      break;
+    }
+  }
+
+  printf( "%s choosing the cards...\n", player->name );
+  sleep( waitTime );
+
+
+  if ( choice == 0 ) {
+    player->state = DISCARD_CARD;
+    puts( "State: Player Card -> Discard Card" );
+    ENTER;
+    return;
+  }
+  else {
+
+    // #ifdef DEBUG
+    printCard( get_element( player->handcard, choice-1 ), GREEN );
+    ENTER;
+    // #endif
+
+    color[choice-1] = 1;
+    printUI( player, "Play Card" );
+    Card tmp = get_element( player->handcard, choice-1 );
+    if ( tmp.is_orange ) {
+      if ( tmp.sticker == BEER && Beer( player, NULL ) ) {
+        Card c = get_element( player->handcard, choice-1 );
+        discardCard( player->handcard, choice-1 );
+      }
+      else if ( tmp.attribute == 1 && orangeCards[tmp.kind]( player ) ) {
+        if ( tmp.kind == BANG ) {
+          player->numOfBang++;
+        }
+        discardCard( player->handcard, choice-1 );
+      }
+      else if ( tmp.attribute == 2 && orangeCards[tmp.sticker]( player ) ) {
+        if ( tmp.sticker == BANG ) {
+          player->numOfBang++;
+        }
+        discardCard( player->handcard, choice-1 );
+      }
+    }
+    else {
+      blueCards[tmp.kind]( player, choice-1 );
+    }
+  }
+  free( color );
+}
+
 void playerCard( Player *player ) {
   if ( player == NULL ) return;
   if ( player->state == IS_DEAD ) return;
+
+  if ( player->isAI ) {
+    AIPlayerCard( player );
+    return;
+  }
 
   int *color = NULL;
   int num = setColor( &color, -1, -1, 1, player->handcard, 3 );
@@ -207,7 +321,7 @@ void playerCard( Player *player ) {
       if ( warn )
         puts("You can't play this card");
       printHandCard( player->handcard, color, true);
-      choice = scan( 0, size, str );
+      choice = scan( 0, size, str, false );
       if ( choice == 0 ) {
         player->state = DISCARD_CARD;
         puts( "State: Player Card -> Discard Card" );
@@ -279,7 +393,7 @@ void discardTurn( Player *player ) {
         ENTER;
       }
       else if ( player->handcard->size > 1 ) {
-        choice = scan( 0, 1, "Do you want to discard cards? (1: yes, 0: no) " );
+        choice = scan( 0, 1, "Do you want to discard cards? (1: yes, 0: no) ", player->isAI );
         if ( choice == 0 ) return;
       }
       else return;
@@ -297,7 +411,7 @@ void IsGameOver( Player *killer, Player *player ){
     
     printf( "You are dying\n" );
     printf( "Are you going to use beer to add up hp?\n" );
-    int choice = scan( 0, 1, "(1: yes, 0: no) " );
+    int choice = scan( 0, 1, "(1: yes, 0: no) ", player->isAI );
     if ( choice == 1 ) {
       Card beer = chooseCard( player, player->handcard, BEER, NULL, false, true, "Choose Beer to add up your HP" );
       if ( beer.number != -1 ) {
@@ -339,6 +453,22 @@ void IsGameOver( Player *killer, Player *player ){
         break;
     }
       
+    if ( SHERIFF_NUM + DEPUTIES_NUM > OUTLAWS_NUM ) {
+      for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+        Player *p = PLAYERS_LIST + i;
+        if ( p->identity == Renegade ) {
+          RELATIONSHIP[p->id][SHERIFF_POSITION] -= 5;
+        }
+      }
+    }
+    else if ( SHERIFF_NUM + DEPUTIES_NUM < OUTLAWS_NUM ) {
+      for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+        Player *p = PLAYERS_LIST + i;
+        if ( p->identity == Renegade ) {
+          RELATIONSHIP[p->id][SHERIFF_POSITION] += 3;
+        }
+      }
+    }
     
     // 判斷遊戲是否結束
     if( SHERIFF_NUM + DEPUTIES_NUM + OUTLAWS_NUM == 0 ) {

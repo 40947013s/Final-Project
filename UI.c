@@ -222,7 +222,7 @@ void printUI2( Player *nowPlayer, int *color, char *msg )
   #ifndef DEBUG
     if ( PLAYERS_LIST[i].state == IS_DEAD || GAME_STATE == END )
       printf("%s%-18s%s", Color[color[i]], identityName[PLAYERS_LIST[i].identity], RESET);
-    else if ( PLAYERS_LIST[i].identity == Sheriff || i == nowPlayer->id )
+    else if ( PLAYERS_LIST[i].identity == Sheriff || ( i == nowPlayer->id && !nowPlayer->isAI ) )
       printf("%s%-18s%s", Color[color[i]], identityName[PLAYERS_LIST[i].identity], RESET );
     else
       printf("%s%-18s%s", Color[color[i]], "*****", RESET );

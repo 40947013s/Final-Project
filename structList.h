@@ -136,6 +136,8 @@ typedef struct _player_list
     
     int numOfBang;
     int bangLimit;
+
+    bool isAI;
 } Player;
 
 

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 #include "structList.h"
 #include "globalVar.h"
 #include "vector.h"

@@ -139,8 +139,21 @@ void clean_buffer(char *arr)
   }
 }
 
-int scan(int min, int max, char *str)
+int scan( int min, int max, char *str, bool isAI )
 {
+
+  if ( isAI ) {
+    printf("%s", str);
+    printf( "Choosing...\n" );
+    sleep( waitTime );
+    int ans = rand() % (max - min + 1) + min;
+    #ifdef DEBUG
+      printf( "Player choice: %d\n", ans );
+      ENTER;
+    #endif
+    return ans;
+  }
+
   int warn = 0, choice = -1;
   char *input = malloc(1000);
   while(1) {
@@ -393,7 +406,7 @@ Card getJudgementCard( Player *player, int kind ) {
     printCard( card2, judge2 ? GREEN : RED );
   
     char *str = "Choose the card you want to use as a decision card ( 1 or 2 ): ";
-    int choice = scan(1, 2, str);
+    int choice = scan(1, 2, str, player->isAI );
     printf( "You choose the card%d\n", choice );
 
     delete_vector( tmpPlayer->handcard );
@@ -444,5 +457,34 @@ bool judgeFunc( Player *player, int kind ) {
     }
 
     return false;
+}
+
+void renewRelationdhip( Player *attacker, Player *defender ) {
+  if ( attacker == NULL || defender == NULL ) return;
+  int attacker_id = attacker->id, defender_id = defender->id;
+
+  if ( attacker_id < 0 || attacker_id >= PLAYERS_NUM || defender_id < 0 || defender_id >= PLAYERS_NUM ) return;
+
+  RELATIONSHIP[defender_id][attacker_id]--;
+  
+  for ( int i = 0; i < PLAYERS_NUM; i++ ) {
+    if ( i == attacker_id || i == defender_id ) continue;
+    Player *p = PLAYERS_LIST + i;
+    if ( p->identity == Deputies && defender->identity == Sheriff ) {
+      RELATIONSHIP[p->id][attacker_id] -= 3;
+    }
+    else if ( p->identity == Outlaws && defender->identity == Sheriff ) {
+      RELATIONSHIP[p->id][attacker_id] += 3;
+    }
+    else {
+      if ( RELATIONSHIP[p->id][defender_id] > 0 ) {
+        RELATIONSHIP[p->id][attacker_id]--;
+      }
+      else if ( RELATIONSHIP[p->id][defender_id] < 0  ) {
+        RELATIONSHIP[p->id][attacker_id]++;
+      }
+    }
+  }
+  
 }
 
