@@ -39,11 +39,10 @@ int main()
     GAME_STATE = IN_ROUND;
   }
 
-  
   TESTCASE
   p->state = JUDGE;
   
-  while ( GAME_STATE == IN_ROUND && GAME_STATE != END ) 
+  while ( GAME_STATE == IN_ROUND ) 
   {
     printUI( p, "" );
 

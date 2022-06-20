@@ -131,6 +131,9 @@ void role_shuffle() {
         }
         is_take[k] = true;
       
+        printf( "Now turn: %s\n", PLAYERS_LIST[i].name );
+        printf( "Your identity is %s\n\n", identityName[PLAYERS_LIST[i].identity] );
+
         // print role j
         char str[1000] = {0};
         strcpy( str, "grep " );
@@ -141,7 +144,7 @@ void role_shuffle() {
         FILE *pFile = pFile = fopen( "j.txt", "r" );
         assert( pFile != NULL );
         fgets( str, 1000, pFile );
-        printf( "%sRole1: %s%s\n\n", BLUE, roleName[j], RESET );
+        printf( "%sRole1: %s%s\n", BLUE, roleName[j], RESET );
         printf( "%sSkill detail: %s\n%s\n", MAG, RESET, str );
 
         // print role k
@@ -153,7 +156,7 @@ void role_shuffle() {
         pFile = fopen( "k.txt", "r" );
         assert( pFile != NULL );
         fgets( str, 1000, pFile );
-        printf( "%sRole2: %s%s\n\n", BLUE, roleName[k], RESET );
+        printf( "%sRole2: %s%s\n", BLUE, roleName[k], RESET );
         printf( "%sSkill detail: %s\n%s\n", MAG, RESET, str );
 
         remove( "j.txt" );

@@ -1,8 +1,5 @@
 #include "cardFunc.h"
 
-
-
-
 // 選擇攻擊對象
 // if limitDistance == -1 then 沒有距離限制
 Player *choosePlayer( Player *attacker, int limitDistance, int *color ) {
@@ -63,6 +60,51 @@ Player *choosePlayer( Player *attacker, int limitDistance, int *color ) {
   return NULL;
   
 } 
+
+Card AIChooseCard( Player *player, Card_vector *cards, int kind, Card_vector *get_card, bool except, char *msg ) {
+  Card c;
+  c.number = -1;
+  if ( player == NULL || cards == NULL ) return c;
+
+  printUI( player, msg );
+
+  if ( isEmpty( cards ) ) {
+    return c;
+  }
+  int *color = NULL;
+  int num = 0;
+
+  if ( !except ) {
+    num = setColor( &color, -1, kind, -1, cards, 3 );
+  }
+  else { // assert except == true
+    num = setColor( &color, -1, -1, -1, cards, 3 );
+    int tmp = setColor( &color, -1, kind, -1, cards, 0 );
+    num -= tmp;
+  }
+  
+  if ( num == 0 ) {
+    free( color );
+    return c;
+  }
+
+  for ( int i = 0; i < cards->size; i++ ) {
+    if ( color[i] == 3 ) {
+      c = get_element( cards, i );
+      if ( get_card != NULL ) {
+        takeCard( cards, get_card, i );
+      }
+      else {
+        discardCard( cards, i );
+      }
+
+      free( color );
+      return c;
+    }
+  }
+
+  return c;
+}
 
 // if kind == -1, then all the card can be chosen
 // if get_card != NULL, then card -> get_card
@@ -232,7 +274,13 @@ bool Miss( Player *defender, int n ) {
     
     char msg[100];
     sprintf( msg, "You still need to throw %d MISSED card(s)", n );
-    bool is_use = chooseCard( defender, defender->handcard, MISSED, NULL, false, true, msg ).number > 0 ? true : false ;
+    // bool is_use = chooseCard( defender, defender->handcard, MISSED, NULL, false, true, msg ).number > 0 ? true : false ;
+    Card c = AIChooseCard( defender, defender->handcard, MISSED, NULL, false, msg );
+    bool is_use = true;
+    puts( "test AIChooseCard: " );
+    printCard( c, GREEN );
+    ENTER;
+
     if ( is_use ) n--;
 
   }

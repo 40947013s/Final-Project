@@ -1,10 +1,6 @@
 #include "UI.h"
 
-/**@brief 打印手牌
- * @param cards 手牌
- * @param color 手牌顏色
- * @param visible 是否顯示手牌
- */
+
 void printHandCard( Card_vector *cards, int color[], bool visible ) {
     if ( isEmpty( cards ) ) {
         printf("There is no card\n");
@@ -109,11 +105,6 @@ int setColor( int **c, int index, int kind, int attribute, Card_vector* cards, i
   return num;
 }
 
-/**@brief 
- * @param 
- * 
- * @param index if index != -1, then color the card at index with color
- */
 
 int setPlayerColor( int **c, int limit_distance, Player *player, int index, int color, bool is_default ) {
   if ( player == NULL  ) return 0;
@@ -357,7 +348,6 @@ void print_player(int th)
     printf("\n");
     printf("Identity : %d\n\n\n", PLAYERS_LIST[th].identity);    
 }
-
 
 void printCard( Card card, char *color ) 
 {

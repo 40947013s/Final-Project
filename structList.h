@@ -128,10 +128,12 @@ typedef struct _player_list
 
     Card_vector* judgeCards;
     Card_vector* handcard;
+    
     char    name[1000];    
     Role    role;
     RMode   state;    
     Identity identity;
+    
     int numOfBang;
     int bangLimit;
 } Player;

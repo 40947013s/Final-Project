@@ -55,17 +55,14 @@ void game_prepare()
     discardPile = create_vector(80);
     
     for (int i = 0; i < 80; i++) {
-        push_back(discardPile, CARD[i]);
+      push_back(discardPile, CARD[i]);
     }
 
     shuffle();   
   
     //設定角色    
     role_shuffle();
-    for ( int i = 0; i < PLAYERS_NUM; i++ ) {
-      Player *p = PLAYERS_LIST + i;
-       //skills[p->role]( &p, NULL );
-    }
+    
     PLAYERS_LIST[SHERIFF_POSITION].hp++;
     PLAYERS_LIST[SHERIFF_POSITION].hp_limit++;    
  
@@ -226,6 +223,7 @@ void playerCard( Player *player ) {
         fgets(input, 100, stdin);
         if (( input[0] == 'Y' || input[0] == 'y' || input[0] == '\n' ) && tmp.sticker != NONE ) {
             warn = false;
+
             if ( tmp.is_orange ) {
               if ( tmp.sticker == BEER && Beer( player, NULL ) ) {
                 Card c = get_element( player->handcard, choice-1 );
@@ -345,6 +343,7 @@ void IsGameOver( Player *killer, Player *player ){
     // 判斷遊戲是否結束
     if( SHERIFF_NUM + DEPUTIES_NUM + OUTLAWS_NUM == 0 ) {
         GAME_STATE = END;
+        printUI( player, "Game Over" );
         // set winner(叛徒)
         puts( "Renegade win : " );    
         for(int i = 0; i < PLAYERS_NUM; i++) {
@@ -354,6 +353,7 @@ void IsGameOver( Player *killer, Player *player ){
         }
     } else if ( SHERIFF_NUM == 0 ) {
         GAME_STATE = END;
+        printUI( player, "Game Over" );
         // set winner(歹徒)
         puts( "Outlaws win : " );    
         for(int i = 0; i < PLAYERS_NUM; i++) {
@@ -363,6 +363,7 @@ void IsGameOver( Player *killer, Player *player ){
         }
     } else if ( OUTLAWS_NUM + RENEGADE_NUM == 0 ) {
         GAME_STATE = END;
+        printUI( player, "Game Over" );
         // set winner(警長副警長)
         puts( "Sheriff and Deputies win : " );    
         printf("Player %s\n", PLAYERS_LIST[SHERIFF_POSITION].name);  //警長            
